@@ -1,0 +1,7 @@
+webmagic_metodo1_excluido
+Método: us.codecraft.webmagic.downloader.HttpClientDownloader#download(Request, Task)
+Data: 2025-10-28 17:01:30
+Ramo do submódulo: exp/excluir-metodo1
+Testes renomeados:
+webmagic-core/src/test/java/us/codecraft/webmagic/downloader/SSLCompatibilityTest.java
+webmagic-core/src/test/java/us/codecraft/webmagic/downloader/HttpClientDownloaderTest.java
