@@ -1,0 +1,24 @@
+Tarefa
+Gere testes automatizados para o método **us.codecraft.webmagic.downloader.HttpClientDownloader#download(Request, Task)** no projeto anexado.
+
+Requisitos mínimos
+- Não modifique o código de produção.
+- Testes 100% determinísticos (sem acesso à internet/FS/relógio real; sem sleeps arbitrários).
+- Sem dependências novas; use apenas o que já existe no projeto/JDK.
+- Isole rede com um servidor HTTP local embutido (ex.: com.sun.net.httpserver.HttpServer), iniciando e finalizando no setup/teardown.
+
+O que validar (essencial, conciso)
+1) Sucesso 200: download retorna Page com URL correta e corpo acessível.
+2) Propagação: Site → headers e cookies chegam ao servidor.
+3) Timeout: Site.setTimeOut(...) é respeitado (simule atraso e valide falha adequada).
+4) Status não-200: tratamento consistente (ex.: 404).
+
+Entrega
+- Linguagem/framework: Java + JUnit 4 + AssertJ.
+- Local do arquivo: webmagic-core/src/test/java/ (mesmo pacote do alvo).
+- Nome sugerido: HttpClientDownloaderLLMTest.java.
+- Inclua servidor local e um Task mínimo que retorne o Site configurado.
+
+Critérios de aceitação
+- Os testes compilam e executam no projeto anexado.
+- Os asserts verificam o comportamento essencial descrito acima.
