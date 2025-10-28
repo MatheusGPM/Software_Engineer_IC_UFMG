@@ -1,0 +1,3 @@
+[submodule "vendor/webmagic"]
+	path = vendor/webmagic
+	url = git@github.com:MatheusGPM/webmagic.git
