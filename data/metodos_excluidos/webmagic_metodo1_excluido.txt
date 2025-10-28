@@ -1,7 +1,9 @@
-webmagic_metodo1_excluido
+[Projeto IC] Método excluído #1
 Método: us.codecraft.webmagic.downloader.HttpClientDownloader#download(Request, Task)
-Data: 2025-10-28 17:01:30
-Ramo do submódulo: exp/excluir-metodo1
-Testes renomeados:
-webmagic-core/src/test/java/us/codecraft/webmagic/downloader/SSLCompatibilityTest.java
-webmagic-core/src/test/java/us/codecraft/webmagic/downloader/HttpClientDownloaderTest.java
+Descrição: Executa a requisição HTTP conforme Request/Site, aplica headers/cookies/timeouts e converte a resposta em Page.
+Motivo: Preparar geração por LLM de um teste equivalente ao dos desenvolvedores, para comparação de cobertura/qualidade.
+Ação aplicada: desativados/isolados os testes do desenvolvedor que cobriam este método (sem alterar o código de produção).
+Submódulo: vendor/webmagic  (branch: exp/excluir-metodo1, commit: 006cf4da)
+Arquivos de teste impactados:
+ (não encontrado automaticamente; revisar manualmente)
+Data: 2025-10-28T17:32:17-03:00
