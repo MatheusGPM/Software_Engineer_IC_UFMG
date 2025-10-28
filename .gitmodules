@@ -1,3 +1,6 @@
 [submodule "vendor/webmagic"]
 	path = vendor/webmagic
 	url = git@github.com:MatheusGPM/webmagic.git
+[submodule "vendor/webmagic_original"]
+	path = vendor/webmagic_original
+	url = https://github.com/code4craft/webmagic.git
