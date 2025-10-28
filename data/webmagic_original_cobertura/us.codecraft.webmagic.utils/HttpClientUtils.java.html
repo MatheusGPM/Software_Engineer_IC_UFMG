@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpClientUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.utils</a> &gt; <span class="el_source">HttpClientUtils.java</span></div><h1>HttpClientUtils.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.utils;
+
+import org.apache.http.Header;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author code4crafter@gmail.com
+ *         Date: 17/3/27
+ */
+<span class="nc" id="L14">public abstract class HttpClientUtils {</span>
+
+    public static Map&lt;String,List&lt;String&gt;&gt; convertHeaders(Header[] headers){
+<span class="fc" id="L17">        Map&lt;String,List&lt;String&gt;&gt; results = new HashMap&lt;String, List&lt;String&gt;&gt;();</span>
+<span class="fc bfc" id="L18" title="All 2 branches covered.">        for (Header header : headers) {</span>
+<span class="fc" id="L19">            List&lt;String&gt; list = results.get(header.getName());</span>
+<span class="fc bfc" id="L20" title="All 2 branches covered.">            if (list == null) {</span>
+<span class="fc" id="L21">                list = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L22">                results.put(header.getName(), list);</span>
+            }
+<span class="fc" id="L24">            list.add(header.getValue());</span>
+        }
+<span class="fc" id="L26">        return results;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

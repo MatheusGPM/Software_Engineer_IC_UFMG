@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SmartContentSelector.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.selector</a> &gt; <span class="el_source">SmartContentSelector.java</span></div><h1>SmartContentSelector.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.selector;
+
+import us.codecraft.webmagic.utils.Experimental;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * Borrowed from https://code.google.com/p/cx-extractor/
+ *
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @since 0.4.1
+ *
+ */
+@Experimental
+public class SmartContentSelector implements Selector {
+
+<span class="nc" id="L19">    private int threshold = 86;</span>
+
+<span class="nc" id="L21">    public SmartContentSelector() {</span>
+<span class="nc" id="L22">    }</span>
+
+<span class="nc" id="L24">    public SmartContentSelector(int threshold) {</span>
+<span class="nc" id="L25">        this.threshold = threshold;</span>
+<span class="nc" id="L26">    }</span>
+
+    @Override
+    public String select(String html) {
+<span class="nc" id="L30">        html = html.replaceAll(&quot;(?is)&lt;!DOCTYPE.*?&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L31">        html = html.replaceAll(&quot;(?is)&lt;!--.*?--&gt;&quot;, &quot;&quot;);				// remove html comment</span>
+<span class="nc" id="L32">        html = html.replaceAll(&quot;(?is)&lt;script.*?&gt;.*?&lt;/script&gt;&quot;, &quot;&quot;); // remove javascript</span>
+<span class="nc" id="L33">        html = html.replaceAll(&quot;(?is)&lt;style.*?&gt;.*?&lt;/style&gt;&quot;, &quot;&quot;);   // remove css</span>
+<span class="nc" id="L34">        html = html.replaceAll(&quot;&amp;.{2,5};|&amp;#.{2,5};&quot;, &quot; &quot;);			// remove special char</span>
+<span class="nc" id="L35">        html = html.replaceAll(&quot;(?is)&lt;.*?&gt;&quot;, &quot;&quot;);</span>
+        List&lt;String&gt; lines;
+<span class="nc" id="L37">        int blocksWidth =3;</span>
+        int start;
+        int end;
+<span class="nc" id="L40">        StringBuilder text = new StringBuilder();</span>
+<span class="nc" id="L41">        ArrayList&lt;Integer&gt; indexDistribution = new ArrayList&lt;Integer&gt;();</span>
+
+<span class="nc" id="L43">        lines = Arrays.asList(html.split(&quot;\n&quot;));</span>
+
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        for (int i = 0; i &lt; lines.size() - blocksWidth; i++) {</span>
+<span class="nc" id="L46">            int wordsNum = 0;</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            for (int j = i; j &lt; i + blocksWidth; j++) {</span>
+<span class="nc" id="L48">                lines.set(j, lines.get(j).replaceAll(&quot;\\s+&quot;, &quot;&quot;));</span>
+<span class="nc" id="L49">                wordsNum += lines.get(j).length();</span>
+            }
+<span class="nc" id="L51">            indexDistribution.add(wordsNum);</span>
+        }
+
+<span class="nc" id="L54">        start = -1; end = -1;</span>
+<span class="nc" id="L55">        boolean boolstart = false, boolend = false;</span>
+<span class="nc" id="L56">        text.setLength(0);</span>
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        for (int i = 0; i &lt; indexDistribution.size() - 1; i++) {</span>
+<span class="nc bnc" id="L59" title="All 4 branches missed.">            if (indexDistribution.get(i) &gt; threshold &amp;&amp; ! boolstart) {</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">                if (indexDistribution.get(i+1).intValue() != 0</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">                        || indexDistribution.get(i+2).intValue() != 0</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">                        || indexDistribution.get(i+3).intValue() != 0) {</span>
+<span class="nc" id="L63">                    boolstart = true;</span>
+<span class="nc" id="L64">                    start = i;</span>
+<span class="nc" id="L65">                    continue;</span>
+                }
+            }
+<span class="nc bnc" id="L68" title="All 2 branches missed.">            if (boolstart) {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (indexDistribution.get(i).intValue() == 0</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">                        || indexDistribution.get(i+1).intValue() == 0) {</span>
+<span class="nc" id="L71">                    end = i;</span>
+<span class="nc" id="L72">                    boolend = true;</span>
+                }
+            }
+<span class="nc" id="L75">            StringBuilder tmp = new StringBuilder();</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">            if (boolend) {</span>
+                //System.out.println(start+1 + &quot;\t\t&quot; + end+1);
+<span class="nc bnc" id="L78" title="All 2 branches missed.">                for (int ii = start; ii &lt;= end; ii++) {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                    if (lines.get(ii).length() &lt; 5) continue;</span>
+<span class="nc" id="L80">                    tmp.append(lines.get(ii) + &quot;\n&quot;);</span>
+                }
+<span class="nc" id="L82">                String str = tmp.toString();</span>
+                //System.out.println(str);
+<span class="nc bnc" id="L84" title="All 2 branches missed.">                if (str.contains(&quot;Copyright&quot;)   ) continue;</span>
+<span class="nc" id="L85">                text.append(str);</span>
+<span class="nc" id="L86">                boolstart = boolend = false;</span>
+            }
+        }
+<span class="nc" id="L89">        return text.toString();</span>
+    }
+
+    @Override
+    public List&lt;String&gt; selectList(String text) {
+<span class="nc" id="L94">        throw new UnsupportedOperationException();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

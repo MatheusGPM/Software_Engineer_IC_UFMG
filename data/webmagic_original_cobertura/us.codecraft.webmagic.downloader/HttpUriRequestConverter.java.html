@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpUriRequestConverter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.downloader</a> &gt; <span class="el_source">HttpUriRequestConverter.java</span></div><h1>HttpUriRequestConverter.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.downloader;
+
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthState;
+import org.apache.http.auth.ChallengeState;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import us.codecraft.webmagic.Request;
+import us.codecraft.webmagic.Site;
+import us.codecraft.webmagic.proxy.Proxy;
+import us.codecraft.webmagic.utils.HttpConstant;
+import us.codecraft.webmagic.utils.UrlUtils;
+
+import java.util.Map;
+
+/**
+ * @author code4crafter@gmail.com
+ *         Date: 17/3/18
+ *         Time: 11:28
+ *
+ * @since 0.7.0
+ */
+<span class="fc" id="L32">public class HttpUriRequestConverter {</span>
+
+    public HttpClientRequestContext convert(Request request, Site site, Proxy proxy) {
+<span class="fc" id="L35">        HttpClientRequestContext httpClientRequestContext = new HttpClientRequestContext();</span>
+<span class="fc" id="L36">        httpClientRequestContext.setHttpUriRequest(convertHttpUriRequest(request, site, proxy));</span>
+<span class="fc" id="L37">        httpClientRequestContext.setHttpClientContext(convertHttpClientContext(request, site, proxy));</span>
+<span class="fc" id="L38">        return httpClientRequestContext;</span>
+    }
+
+    private HttpClientContext convertHttpClientContext(Request request, Site site, Proxy proxy) {
+<span class="fc" id="L42">        HttpClientContext httpContext = new HttpClientContext();</span>
+<span class="pc bpc" id="L43" title="1 of 4 branches missed.">        if (proxy != null &amp;&amp; proxy.getUsername() != null) {</span>
+<span class="fc" id="L44">            AuthState authState = new AuthState();</span>
+<span class="fc" id="L45">            BasicScheme proxyAuthScheme = new BasicScheme(ChallengeState.PROXY);</span>
+<span class="fc" id="L46">            UsernamePasswordCredentials proxyCredentials = new UsernamePasswordCredentials(proxy.getUsername(), proxy.getPassword());</span>
+<span class="fc" id="L47">            authState.update(proxyAuthScheme, proxyCredentials);</span>
+<span class="fc" id="L48">            httpContext.setAttribute(HttpClientContext.PROXY_AUTH_STATE, authState);</span>
+        }
+<span class="pc bpc" id="L50" title="1 of 4 branches missed.">        if (request.getCookies() != null &amp;&amp; !request.getCookies().isEmpty()) {</span>
+<span class="fc" id="L51">            CookieStore cookieStore = new BasicCookieStore();</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            for (Map.Entry&lt;String, String&gt; cookieEntry : request.getCookies().entrySet()) {</span>
+<span class="fc" id="L53">                BasicClientCookie cookie1 = new BasicClientCookie(cookieEntry.getKey(), cookieEntry.getValue());</span>
+<span class="fc" id="L54">                cookie1.setDomain(UrlUtils.removePort(UrlUtils.getDomain(request.getUrl())));</span>
+<span class="fc" id="L55">                cookieStore.addCookie(cookie1);</span>
+<span class="fc" id="L56">            }</span>
+<span class="fc" id="L57">            httpContext.setCookieStore(cookieStore);</span>
+        }
+<span class="fc" id="L59">        return httpContext;</span>
+    }
+
+    private HttpUriRequest convertHttpUriRequest(Request request, Site site, Proxy proxy) {
+<span class="fc" id="L63">        RequestBuilder requestBuilder = selectRequestMethod(request).setUri(UrlUtils.fixIllegalCharacterInUrl(request.getUrl()));</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if (site.getHeaders() != null) {</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            for (Map.Entry&lt;String, String&gt; headerEntry : site.getHeaders().entrySet()) {</span>
+<span class="fc" id="L66">                requestBuilder.addHeader(headerEntry.getKey(), headerEntry.getValue());</span>
+<span class="fc" id="L67">            }</span>
+        }
+
+<span class="fc" id="L70">        RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (site != null) {</span>
+<span class="fc" id="L72">            requestConfigBuilder.setConnectionRequestTimeout(site.getTimeOut())</span>
+<span class="fc" id="L73">                    .setSocketTimeout(site.getTimeOut())</span>
+<span class="fc" id="L74">                    .setConnectTimeout(site.getTimeOut())</span>
+<span class="fc" id="L75">                    .setCookieSpec(CookieSpecs.STANDARD);</span>
+        }
+
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (proxy != null) {</span>
+<span class="fc" id="L79">            requestConfigBuilder.setProxy(new HttpHost(proxy.getHost(), proxy.getPort(), proxy.getScheme()));</span>
+        }
+<span class="fc" id="L81">        requestBuilder.setConfig(requestConfigBuilder.build());</span>
+<span class="fc" id="L82">        HttpUriRequest httpUriRequest = requestBuilder.build();</span>
+<span class="pc bpc" id="L83" title="1 of 4 branches missed.">        if (request.getHeaders() != null &amp;&amp; !request.getHeaders().isEmpty()) {</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">            for (Map.Entry&lt;String, String&gt; header : request.getHeaders().entrySet()) {</span>
+<span class="fc" id="L85">                httpUriRequest.addHeader(header.getKey(), header.getValue());</span>
+<span class="fc" id="L86">            }</span>
+        }
+<span class="fc" id="L88">        return httpUriRequest;</span>
+    }
+
+    private RequestBuilder selectRequestMethod(Request request) {
+<span class="fc" id="L92">        String method = request.getMethod();</span>
+<span class="fc bfc" id="L93" title="All 4 branches covered.">        if (method == null || method.equalsIgnoreCase(HttpConstant.Method.GET)) {</span>
+            //default get
+<span class="fc" id="L95">            return RequestBuilder.get();</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        } else if (method.equalsIgnoreCase(HttpConstant.Method.POST)) {</span>
+<span class="fc" id="L97">            return addFormParams(RequestBuilder.post(),request);</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        } else if (method.equalsIgnoreCase(HttpConstant.Method.HEAD)) {</span>
+<span class="fc" id="L99">            return RequestBuilder.head();</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        } else if (method.equalsIgnoreCase(HttpConstant.Method.PUT)) {</span>
+<span class="fc" id="L101">            return addFormParams(RequestBuilder.put(), request);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        } else if (method.equalsIgnoreCase(HttpConstant.Method.DELETE)) {</span>
+<span class="fc" id="L103">            return RequestBuilder.delete();</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        } else if (method.equalsIgnoreCase(HttpConstant.Method.TRACE)) {</span>
+<span class="fc" id="L105">            return RequestBuilder.trace();</span>
+        }
+<span class="nc" id="L107">        throw new IllegalArgumentException(&quot;Illegal HTTP Method &quot; + method);</span>
+    }
+
+    private RequestBuilder addFormParams(RequestBuilder requestBuilder, Request request) {
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (request.getRequestBody() != null) {</span>
+<span class="fc" id="L112">            ByteArrayEntity entity = new ByteArrayEntity(request.getRequestBody().getBody());</span>
+<span class="fc" id="L113">            entity.setContentType(request.getRequestBody().getContentType());</span>
+<span class="fc" id="L114">            requestBuilder.setEntity(entity);</span>
+        }
+<span class="fc" id="L116">        return requestBuilder;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

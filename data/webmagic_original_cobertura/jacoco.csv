@@ -1,0 +1,69 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+webmagic-core,us.codecraft.webmagic.processor,PageProcessor,0,2,0,0,0,1,0,1,0,1
+webmagic-core,us.codecraft.webmagic.processor,SimplePageProcessor,50,0,0,0,11,0,3,0,3,0
+webmagic-core,us.codecraft.webmagic.pipeline,ConsolePipeline,32,0,2,0,6,0,3,0,2,0
+webmagic-core,us.codecraft.webmagic.pipeline,FilePipeline,89,26,6,0,17,8,4,2,1,2
+webmagic-core,us.codecraft.webmagic.pipeline,ResultItemsCollectorPipeline,17,0,0,0,5,0,3,0,3,0
+webmagic-core,us.codecraft.webmagic.utils,HttpClientUtils,3,45,0,4,1,8,1,3,1,1
+webmagic-core,us.codecraft.webmagic.utils,HttpConstant,3,0,0,0,1,0,1,0,1,0
+webmagic-core,us.codecraft.webmagic.utils,WMCollections,59,0,4,0,9,0,5,0,3,0
+webmagic-core,us.codecraft.webmagic.utils,ProxyUtils,49,0,2,0,15,0,4,0,3,0
+webmagic-core,us.codecraft.webmagic.utils,HttpConstant.Method,3,0,0,0,1,0,1,0,1,0
+webmagic-core,us.codecraft.webmagic.utils,UrlUtils,91,95,8,10,23,26,10,11,5,7
+webmagic-core,us.codecraft.webmagic.utils,HttpConstant.StatusCode,3,0,0,0,1,0,1,0,1,0
+webmagic-core,us.codecraft.webmagic.utils,HttpConstant.Header,3,0,0,0,1,0,1,0,1,0
+webmagic-core,us.codecraft.webmagic.utils,CharsetUtils,14,81,5,7,6,19,5,4,1,2
+webmagic-core,us.codecraft.webmagic.utils,FilePersistentBase,7,53,4,4,2,18,5,5,1,5
+webmagic-core,us.codecraft.webmagic.utils,NumberUtils,3,4,0,0,1,1,1,1,1,1
+webmagic-core,us.codecraft.webmagic.utils,BaseSelectorUtils,14,18,8,4,2,3,7,1,1,1
+webmagic-core,us.codecraft.webmagic.processor.example,BaiduBaikePageProcessor,126,0,2,0,22,0,5,0,4,0
+webmagic-core,us.codecraft.webmagic.processor.example,ZhihuPageProcessor,68,0,2,0,12,0,5,0,4,0
+webmagic-core,us.codecraft.webmagic.processor.example,GithubRepoPageProcessor,64,15,2,0,10,3,3,2,2,2
+webmagic-core,us.codecraft.webmagic.selector,OrSelector,2,86,1,7,1,19,1,7,0,4
+webmagic-core,us.codecraft.webmagic.selector,Html,66,37,4,0,18,12,6,5,4,5
+webmagic-core,us.codecraft.webmagic.selector,RegexSelector,10,165,2,12,3,40,3,12,1,7
+webmagic-core,us.codecraft.webmagic.selector,XpathSelector,14,29,2,0,4,7,2,5,1,5
+webmagic-core,us.codecraft.webmagic.selector,AndSelector,2,119,2,14,1,28,2,10,0,4
+webmagic-core,us.codecraft.webmagic.selector,HtmlNode,50,173,2,12,12,46,7,15,6,9
+webmagic-core,us.codecraft.webmagic.selector,AbstractSelectable,43,110,3,7,10,26,10,11,7,9
+webmagic-core,us.codecraft.webmagic.selector,LinksSelector,12,45,0,4,3,10,3,5,3,3
+webmagic-core,us.codecraft.webmagic.selector,SmartContentSelector,237,0,30,0,49,0,19,0,4,0
+webmagic-core,us.codecraft.webmagic.selector,Selectors,17,37,0,0,4,7,4,7,4,7
+webmagic-core,us.codecraft.webmagic.selector,CssSelector,46,112,11,13,11,31,10,11,2,7
+webmagic-core,us.codecraft.webmagic.selector,Json,24,42,4,0,8,11,5,3,3,3
+webmagic-core,us.codecraft.webmagic.selector,RegexResult,2,22,1,1,1,8,1,4,0,4
+webmagic-core,us.codecraft.webmagic.selector,JsonPathSelector,10,86,4,10,4,24,5,7,1,4
+webmagic-core,us.codecraft.webmagic.selector,PlainText,51,22,2,0,10,8,7,3,6,3
+webmagic-core,us.codecraft.webmagic.selector,ReplaceSelector,17,24,0,0,4,8,2,2,2,2
+webmagic-core,us.codecraft.webmagic.selector,BaseElementSelector,28,25,6,2,8,7,6,4,2,4
+webmagic-core,us.codecraft.webmagic,Page,189,109,19,1,46,33,28,17,18,17
+webmagic-core,us.codecraft.webmagic,Spider.Status,59,0,4,0,10,0,6,0,4,0
+webmagic-core,us.codecraft.webmagic,Request,35,203,10,12,4,49,11,27,2,25
+webmagic-core,us.codecraft.webmagic,SpiderListener,5,0,0,0,3,0,2,0,2,0
+webmagic-core,us.codecraft.webmagic,Site.new Task() {...},11,9,2,0,4,2,2,2,1,2
+webmagic-core,us.codecraft.webmagic,Spider.new Runnable() {...},45,0,0,0,9,0,2,0,2,0
+webmagic-core,us.codecraft.webmagic,SpiderScheduler,56,16,2,0,18,5,7,1,6,1
+webmagic-core,us.codecraft.webmagic,Site,212,260,43,21,24,68,39,30,8,29
+webmagic-core,us.codecraft.webmagic,ResultItems,32,27,2,0,8,8,5,5,4,5
+webmagic-core,us.codecraft.webmagic,Spider,773,177,100,12,204,48,101,11,46,10
+webmagic-core,us.codecraft.webmagic.downloader,HttpUriRequestConverter,6,275,7,33,1,59,7,19,0,6
+webmagic-core,us.codecraft.webmagic.downloader,HttpClientGenerator,76,223,6,8,13,48,6,9,1,7
+webmagic-core,us.codecraft.webmagic.downloader,CustomRedirectStrategy,21,27,1,1,7,6,1,2,0,2
+webmagic-core,us.codecraft.webmagic.downloader,HttpClientGenerator.new X509TrustManager() {...},1,9,0,0,1,3,1,3,1,3
+webmagic-core,us.codecraft.webmagic.downloader,HttpClientGenerator.new HttpRequestInterceptor() {...},0,15,1,1,0,4,1,2,0,2
+webmagic-core,us.codecraft.webmagic.downloader,AbstractDownloader,0,45,0,0,0,14,0,9,0,9
+webmagic-core,us.codecraft.webmagic.downloader,HttpClientRequestContext,0,17,0,0,0,7,0,5,0,5
+webmagic-core,us.codecraft.webmagic.downloader,HttpClientDownloader,18,256,9,25,5,57,11,14,2,6
+webmagic-core,us.codecraft.webmagic.scheduler,DuplicateRemovedScheduler,11,55,4,4,4,10,7,4,3,4
+webmagic-core,us.codecraft.webmagic.scheduler,QueueScheduler,40,8,0,0,12,3,5,1,5,1
+webmagic-core,us.codecraft.webmagic.scheduler,PriorityScheduler,9,77,0,8,2,17,2,7,2,3
+webmagic-core,us.codecraft.webmagic.scheduler,PriorityScheduler.new Comparator() {...},0,13,0,0,0,2,0,2,0,2
+webmagic-core,us.codecraft.webmagic.scheduler,PriorityScheduler.new Comparator() {...},7,6,0,0,1,1,1,1,1,1
+webmagic-core,us.codecraft.webmagic.thread,CountableThreadPool.new Runnable() {...},30,0,0,0,7,0,2,0,2,0
+webmagic-core,us.codecraft.webmagic.thread,CountableThreadPool,80,25,4,0,21,7,9,1,7,1
+webmagic-core,us.codecraft.webmagic.scheduler.component,HashSetDuplicateRemover,10,21,1,1,3,4,3,3,2,3
+webmagic-core,us.codecraft.webmagic.model,HttpRequestBody,67,59,0,2,18,12,8,5,8,4
+webmagic-core,us.codecraft.webmagic.model,HttpRequestBody.ContentType,3,0,0,0,1,0,1,0,1,0
+webmagic-core,us.codecraft.webmagic.proxy,Proxy,282,48,52,0,41,18,33,8,7,8
+webmagic-core,us.codecraft.webmagic.proxy,ProxyProvider,8,0,0,0,2,0,2,0,2,0
+webmagic-core,us.codecraft.webmagic.proxy,SimpleProxyProvider,17,70,3,3,3,16,2,7,0,6

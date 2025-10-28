@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PriorityScheduler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.scheduler</a> &gt; <span class="el_source">PriorityScheduler.java</span></div><h1>PriorityScheduler.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.scheduler;
+
+import us.codecraft.webmagic.Request;
+import us.codecraft.webmagic.Task;
+import us.codecraft.webmagic.utils.NumberUtils;
+
+import java.util.Comparator;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
+
+/**
+ * Priority scheduler. Request with higher priority will poll earlier. &lt;br&gt;
+ *
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @since 0.2.1
+ */
+<span class="fc" id="L18">public class PriorityScheduler extends DuplicateRemovedScheduler implements MonitorableScheduler {</span>
+
+    public static final int INITIAL_CAPACITY = 5;
+
+<span class="fc" id="L22">    private BlockingQueue&lt;Request&gt; noPriorityQueue = new LinkedBlockingQueue&lt;Request&gt;();</span>
+
+<span class="fc" id="L24">    private PriorityBlockingQueue&lt;Request&gt; priorityQueuePlus = new PriorityBlockingQueue&lt;Request&gt;(INITIAL_CAPACITY, new Comparator&lt;Request&gt;() {</span>
+        @Override
+        public int compare(Request o1, Request o2) {
+<span class="fc" id="L27">            return -NumberUtils.compareLong(o1.getPriority(), o2.getPriority());</span>
+        }
+    });
+
+<span class="fc" id="L31">    private PriorityBlockingQueue&lt;Request&gt; priorityQueueMinus = new PriorityBlockingQueue&lt;Request&gt;(INITIAL_CAPACITY, new Comparator&lt;Request&gt;() {</span>
+        @Override
+        public int compare(Request o1, Request o2) {
+<span class="nc" id="L34">            return -NumberUtils.compareLong(o1.getPriority(), o2.getPriority());</span>
+        }
+    });
+
+    @Override
+    public void pushWhenNoDuplicate(Request request, Task task) {
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (request.getPriority() == 0) {</span>
+<span class="fc" id="L41">            noPriorityQueue.add(request);</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        } else if (request.getPriority() &gt; 0) {</span>
+<span class="fc" id="L43">            priorityQueuePlus.put(request);</span>
+        } else {
+<span class="fc" id="L45">            priorityQueueMinus.put(request);</span>
+        }
+<span class="fc" id="L47">    }</span>
+
+    @Override
+    public synchronized Request poll(Task task) {
+<span class="fc" id="L51">        Request poll = priorityQueuePlus.poll();</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (poll != null) {</span>
+<span class="fc" id="L53">            return poll;</span>
+        }
+<span class="fc" id="L55">        poll = noPriorityQueue.poll();</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (poll != null) {</span>
+<span class="fc" id="L57">            return poll;</span>
+        }
+<span class="fc" id="L59">        return priorityQueueMinus.poll();</span>
+    }
+
+    @Override
+    public int getLeftRequestsCount(Task task) {
+<span class="nc" id="L64">        return noPriorityQueue.size();</span>
+    }
+
+    @Override
+    public int getTotalRequestsCount(Task task) {
+<span class="nc" id="L69">        return getDuplicateRemover().getTotalRequestsCount(task);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
