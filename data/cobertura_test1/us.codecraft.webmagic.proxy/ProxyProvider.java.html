@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProxyProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.proxy</a> &gt; <span class="el_source">ProxyProvider.java</span></div><h1>ProxyProvider.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.proxy;
+
+import us.codecraft.webmagic.Page;
+import us.codecraft.webmagic.Request;
+import us.codecraft.webmagic.Task;
+
+/**
+ * Proxy provider. &lt;br&gt;
+ *     
+ * @since 0.7.0
+ */
+public interface ProxyProvider {
+
+    /**
+     *
+     * Return proxy to Provider when complete a download.
+     * @param proxy the proxy config contains host,port and identify info
+     * @param page the download result
+     * @param task the download task
+     */
+    void returnProxy(Proxy proxy, Page page, Task task);
+
+    /**
+     * Get a proxy for task by some strategy.
+     * @param task the download task
+     * @return proxy 
+     * @deprecated Use {@link #getProxy(Request, Task)} instead.
+     */
+    @Deprecated
+    default Proxy getProxy(Task task) {
+<span class="nc" id="L31">        throw new UnsupportedOperationException();</span>
+    }
+
+    /**
+     * Returns a proxy for the request.
+     *
+     * @param request the request
+     * @param task the download task
+     * @return proxy
+     * @since 0.9.0
+     */
+    default Proxy getProxy(Request request, Task task) {
+<span class="nc" id="L43">        return this.getProxy(task);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
