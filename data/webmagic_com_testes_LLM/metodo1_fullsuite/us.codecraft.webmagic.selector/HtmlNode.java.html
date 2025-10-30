@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HtmlNode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.selector</a> &gt; <span class="el_source">HtmlNode.java</span></div><h1>HtmlNode.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.selector;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+
+/**
+ * @author code4crafer@gmail.com
+ */
+public class HtmlNode extends AbstractSelectable {
+
+    private final List&lt;Element&gt; elements;
+
+<span class="fc" id="L17">    public HtmlNode(List&lt;Element&gt; elements) {</span>
+<span class="fc" id="L18">        this.elements = elements;</span>
+<span class="fc" id="L19">    }</span>
+
+<span class="fc" id="L21">    public HtmlNode() {</span>
+<span class="fc" id="L22">        elements = null;</span>
+<span class="fc" id="L23">    }</span>
+
+    protected List&lt;Element&gt; getElements() {
+<span class="fc" id="L26">        return elements;</span>
+    }
+
+    public Selectable smartContent() {
+<span class="nc" id="L30">        SmartContentSelector smartContentSelector = Selectors.smartContent();</span>
+<span class="nc" id="L31">        return select(smartContentSelector, getSourceTexts());</span>
+    }
+
+    public Selectable smartContent(int threshold) {
+<span class="nc" id="L35">        SmartContentSelector smartContentSelector = Selectors.smartContent(threshold);</span>
+<span class="nc" id="L36">        return select(smartContentSelector, getSourceTexts());</span>
+    }
+
+    @Override
+    public Selectable links() {
+<span class="fc" id="L41">        return selectElements(new LinksSelector());</span>
+    }
+
+    @Override
+    public Selectable xpath(String xpath) {
+<span class="fc" id="L46">        XpathSelector xpathSelector = Selectors.xpath(xpath);</span>
+<span class="fc" id="L47">        return selectElements(xpathSelector);</span>
+    }
+
+    @Override
+    public Selectable selectList(Selector selector) {
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (selector instanceof BaseElementSelector) {</span>
+<span class="nc" id="L53">           return selectElements((BaseElementSelector) selector);</span>
+        }
+<span class="nc" id="L55">        return selectList(selector, getSourceTexts());</span>
+    }
+
+    @Override
+    public Selectable select(Selector selector) {
+<span class="nc" id="L60">        return selectList(selector);</span>
+    }
+
+    /**
+     * select elements
+     *
+     * @param elementSelector elementSelector
+     * @return result
+     */
+    protected Selectable selectElements(BaseElementSelector elementSelector) {
+<span class="fc" id="L70">        ListIterator&lt;Element&gt; elementIterator = getElements().listIterator();</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        if (!elementSelector.hasAttribute()) {</span>
+<span class="fc" id="L72">            List&lt;Element&gt; resultElements = new ArrayList&lt;Element&gt;();</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            while (elementIterator.hasNext()) {</span>
+<span class="fc" id="L74">                Element element = checkElementAndConvert(elementIterator);</span>
+<span class="fc" id="L75">                List&lt;Element&gt; selectElements = elementSelector.selectElements(element);</span>
+<span class="fc" id="L76">                resultElements.addAll(selectElements);</span>
+<span class="fc" id="L77">            }</span>
+<span class="fc" id="L78">            return new HtmlNode(resultElements);</span>
+        } else {
+            // has attribute, consider as plaintext
+<span class="fc" id="L81">            List&lt;String&gt; resultStrings = new ArrayList&lt;String&gt;();</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">            while (elementIterator.hasNext()) {</span>
+<span class="fc" id="L83">                Element element = checkElementAndConvert(elementIterator);</span>
+<span class="fc" id="L84">                List&lt;String&gt; selectList = elementSelector.selectList(element);</span>
+<span class="fc" id="L85">                resultStrings.addAll(selectList);</span>
+<span class="fc" id="L86">            }</span>
+<span class="fc" id="L87">            return new PlainText(resultStrings);</span>
+
+        }
+    }
+
+    /**
+     * Only document can be select
+     * See: https://github.com/code4craft/webmagic/issues/113
+     *
+     * @param elementIterator elementIterator
+     * @return element element
+     */
+    private Element checkElementAndConvert(ListIterator&lt;Element&gt; elementIterator) {
+<span class="fc" id="L100">        Element element = elementIterator.next();</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (!(element instanceof Document)) {</span>
+<span class="fc" id="L102">            Document root = new Document(element.ownerDocument().baseUri());</span>
+<span class="fc" id="L103">            Element clone = element.clone();</span>
+<span class="fc" id="L104">            root.appendChild(clone);</span>
+<span class="fc" id="L105">            elementIterator.set(root);</span>
+<span class="fc" id="L106">            return root;</span>
+        }
+<span class="fc" id="L108">        return element;</span>
+    }
+
+    @Override
+    public Selectable $(String selector) {
+<span class="nc" id="L113">        CssSelector cssSelector = Selectors.$(selector);</span>
+<span class="nc" id="L114">        return selectElements(cssSelector);</span>
+    }
+
+    @Override
+    public Selectable $(String selector, String attrName) {
+<span class="nc" id="L119">        CssSelector cssSelector = Selectors.$(selector, attrName);</span>
+<span class="nc" id="L120">        return selectElements(cssSelector);</span>
+    }
+
+    @Override
+    public List&lt;Selectable&gt; nodes() {
+<span class="fc" id="L125">        List&lt;Selectable&gt; selectables = new ArrayList&lt;Selectable&gt;();</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        for (Element element : getElements()) {</span>
+<span class="fc" id="L127">            List&lt;Element&gt; childElements = new ArrayList&lt;Element&gt;(1);</span>
+<span class="fc" id="L128">            childElements.add(element);</span>
+<span class="fc" id="L129">            selectables.add(new HtmlNode(childElements));</span>
+<span class="fc" id="L130">        }</span>
+<span class="fc" id="L131">        return selectables;</span>
+    }
+
+    @Override
+    protected List&lt;String&gt; getSourceTexts() {
+<span class="fc" id="L136">        List&lt;String&gt; sourceTexts = new ArrayList&lt;String&gt;(getElements().size());</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">        for (Element element : getElements()) {</span>
+<span class="fc" id="L138">            sourceTexts.add(element.toString());</span>
+<span class="fc" id="L139">        }</span>
+<span class="fc" id="L140">        return sourceTexts;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

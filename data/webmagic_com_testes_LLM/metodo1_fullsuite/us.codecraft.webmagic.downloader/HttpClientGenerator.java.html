@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpClientGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.downloader</a> &gt; <span class="el_source">HttpClientGenerator.java</span></div><h1>HttpClientGenerator.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.downloader;
+
+import org.apache.commons.lang3.JavaVersion;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.client.CookieStore;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.*;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.protocol.HttpContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import us.codecraft.webmagic.Site;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Map;
+
+/**
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @since 0.4.0
+ */
+public class HttpClientGenerator {
+
+<span class="fc" id="L39">    private Logger logger = LoggerFactory.getLogger(getClass());</span>
+
+    private PoolingHttpClientConnectionManager connectionManager;
+
+<span class="fc" id="L43">    public HttpClientGenerator() {</span>
+<span class="fc" id="L44">        Registry&lt;ConnectionSocketFactory&gt; reg = RegistryBuilder.&lt;ConnectionSocketFactory&gt;create()</span>
+<span class="fc" id="L45">                .register(&quot;http&quot;, PlainConnectionSocketFactory.INSTANCE)</span>
+<span class="fc" id="L46">                .register(&quot;https&quot;, buildSSLConnectionSocketFactory())</span>
+<span class="fc" id="L47">                .build();</span>
+<span class="fc" id="L48">        connectionManager = new PoolingHttpClientConnectionManager(reg);</span>
+<span class="fc" id="L49">        connectionManager.setDefaultMaxPerRoute(100);</span>
+<span class="fc" id="L50">    }</span>
+
+    private SSLConnectionSocketFactory buildSSLConnectionSocketFactory() {
+        try {
+<span class="fc" id="L54">            SSLContext sslContext = createIgnoreVerifySSL();</span>
+            String[] supportedProtocols;
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">            if (SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_11)) {</span>
+<span class="fc" id="L57">                supportedProtocols = new String[]{&quot;SSLv3&quot;, &quot;TLSv1&quot;, &quot;TLSv1.1&quot;, &quot;TLSv1.2&quot;, &quot;TLSv1.3&quot;};</span>
+            } else {
+<span class="nc" id="L59">                supportedProtocols = new String[]{&quot;SSLv3&quot;, &quot;TLSv1&quot;, &quot;TLSv1.1&quot;, &quot;TLSv1.2&quot;};</span>
+            }
+<span class="fc" id="L61">            logger.debug(&quot;supportedProtocols: {}&quot;, String.join(&quot;, &quot;, supportedProtocols));</span>
+<span class="fc" id="L62">            return new SSLConnectionSocketFactory(sslContext, supportedProtocols,</span>
+                    null,
+                    //不进行主机校验
+<span class="nc" id="L65">                    (host, sslSession) -&gt; true); // 优先绕过安全证书</span>
+<span class="nc" id="L66">        } catch (KeyManagementException | NoSuchAlgorithmException e) {</span>
+<span class="nc" id="L67">            logger.error(&quot;ssl connection fail&quot;, e);</span>
+        }
+<span class="nc" id="L69">        return SSLConnectionSocketFactory.getSocketFactory();</span>
+    }
+
+    private SSLContext createIgnoreVerifySSL() throws NoSuchAlgorithmException, KeyManagementException {
+        // 实现一个X509TrustManager接口，用于绕过验证，不用修改里面的方法
+<span class="fc" id="L74">        X509TrustManager trustManager = new X509TrustManager() {</span>
+
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+<span class="nc" id="L78">            }</span>
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+<span class="nc" id="L82">            }</span>
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+<span class="nc" id="L86">                return null;</span>
+            }
+
+        };
+
+<span class="fc" id="L91">        SSLContext sc = SSLContext.getInstance(&quot;TLS&quot;);</span>
+<span class="fc" id="L92">        sc.init(null, new TrustManager[]{trustManager}, null);</span>
+<span class="fc" id="L93">        return sc;</span>
+    }
+
+    public HttpClientGenerator setPoolSize(int poolSize) {
+<span class="nc" id="L97">        connectionManager.setMaxTotal(poolSize);</span>
+<span class="nc" id="L98">        return this;</span>
+    }
+
+    public CloseableHttpClient getClient(Site site) {
+<span class="fc" id="L102">        return generateClient(site);</span>
+    }
+
+    private CloseableHttpClient generateClient(Site site) {
+<span class="fc" id="L106">        HttpClientBuilder httpClientBuilder = HttpClients.custom();</span>
+
+<span class="fc" id="L108">        httpClientBuilder.setConnectionManager(connectionManager);</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (site.getUserAgent() != null) {</span>
+<span class="nc" id="L110">            httpClientBuilder.setUserAgent(site.getUserAgent());</span>
+        } else {
+<span class="fc" id="L112">            httpClientBuilder.setUserAgent(&quot;&quot;);</span>
+        }
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if (site.isUseGzip()) {</span>
+<span class="fc" id="L115">            httpClientBuilder.addInterceptorFirst(new HttpRequestInterceptor() {</span>
+
+                public void process(
+                        final HttpRequest request,
+                        final HttpContext context) throws HttpException, IOException {
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">                    if (!request.containsHeader(&quot;Accept-Encoding&quot;)) {</span>
+<span class="fc" id="L121">                        request.addHeader(&quot;Accept-Encoding&quot;, &quot;gzip&quot;);</span>
+                    }
+<span class="fc" id="L123">                }</span>
+            });
+        }
+        //解决post/redirect/post 302跳转问题
+<span class="fc" id="L127">        httpClientBuilder.setRedirectStrategy(new CustomRedirectStrategy());</span>
+
+<span class="fc" id="L129">        SocketConfig.Builder socketConfigBuilder = SocketConfig.custom();</span>
+<span class="fc" id="L130">        socketConfigBuilder.setSoKeepAlive(true).setTcpNoDelay(true);</span>
+<span class="fc" id="L131">        socketConfigBuilder.setSoTimeout(site.getTimeOut());</span>
+<span class="fc" id="L132">        SocketConfig socketConfig = socketConfigBuilder.build();</span>
+<span class="fc" id="L133">        httpClientBuilder.setDefaultSocketConfig(socketConfig);</span>
+<span class="fc" id="L134">        connectionManager.setDefaultSocketConfig(socketConfig);</span>
+<span class="fc" id="L135">        httpClientBuilder.setRetryHandler(new DefaultHttpRequestRetryHandler(site.getRetryTimes(), true));</span>
+<span class="fc" id="L136">        generateCookie(httpClientBuilder, site);</span>
+<span class="fc" id="L137">        return httpClientBuilder.build();</span>
+    }
+
+    private void generateCookie(HttpClientBuilder httpClientBuilder, Site site) {
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">        if (site.isDisableCookieManagement()) {</span>
+<span class="nc" id="L142">            httpClientBuilder.disableCookieManagement();</span>
+<span class="nc" id="L143">            return;</span>
+        }
+<span class="fc" id="L145">        CookieStore cookieStore = new BasicCookieStore();</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; cookieEntry : site.getCookies().entrySet()) {</span>
+<span class="fc" id="L147">            BasicClientCookie cookie = new BasicClientCookie(cookieEntry.getKey(), cookieEntry.getValue());</span>
+<span class="fc" id="L148">            cookie.setDomain(site.getDomain());</span>
+<span class="fc" id="L149">            cookieStore.addCookie(cookie);</span>
+<span class="fc" id="L150">        }</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">        for (Map.Entry&lt;String, Map&lt;String, String&gt;&gt; domainEntry : site.getAllCookies().entrySet()) {</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            for (Map.Entry&lt;String, String&gt; cookieEntry : domainEntry.getValue().entrySet()) {</span>
+<span class="nc" id="L153">                BasicClientCookie cookie = new BasicClientCookie(cookieEntry.getKey(), cookieEntry.getValue());</span>
+<span class="nc" id="L154">                cookie.setDomain(domainEntry.getKey());</span>
+<span class="nc" id="L155">                cookieStore.addCookie(cookie);</span>
+<span class="nc" id="L156">            }</span>
+<span class="nc" id="L157">        }</span>
+<span class="fc" id="L158">        httpClientBuilder.setDefaultCookieStore(cookieStore);</span>
+<span class="fc" id="L159">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

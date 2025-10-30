@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpRequestBody.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.model</a> &gt; <span class="el_source">HttpRequestBody.java</span></div><h1>HttpRequestBody.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.model;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.message.BasicNameValuePair;
+
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author code4crafter@gmail.com
+ *         Date: 17/4/8
+ */
+public class HttpRequestBody implements Serializable {
+
+    private static final long serialVersionUID = 5659170945717023595L;
+
+<span class="nc" id="L21">    public static abstract class ContentType {</span>
+
+        public static final String JSON = &quot;application/json&quot;;
+
+        public static final String XML = &quot;text/xml&quot;;
+
+        public static final String FORM = &quot;application/x-www-form-urlencoded&quot;;
+
+        public static final String MULTIPART = &quot;multipart/form-data&quot;;
+    }
+
+    private byte[] body;
+
+    private String contentType;
+
+    private String encoding;
+
+<span class="nc" id="L38">    public HttpRequestBody() {</span>
+<span class="nc" id="L39">    }</span>
+
+<span class="nc" id="L41">    public HttpRequestBody(byte[] body, String contentType, String encoding) {</span>
+<span class="nc" id="L42">        this.body = body;</span>
+<span class="nc" id="L43">        this.contentType = contentType;</span>
+<span class="nc" id="L44">        this.encoding = encoding;</span>
+<span class="nc" id="L45">    }</span>
+
+    public String getContentType() {
+<span class="nc" id="L48">        return contentType;</span>
+    }
+
+    public String getEncoding() {
+<span class="nc" id="L52">        return encoding;</span>
+    }
+
+    public void setBody(byte[] body) {
+<span class="nc" id="L56">        this.body = body;</span>
+<span class="nc" id="L57">    }</span>
+
+    public void setContentType(String contentType) {
+<span class="nc" id="L60">        this.contentType = contentType;</span>
+<span class="nc" id="L61">    }</span>
+
+    public void setEncoding(String encoding) {
+<span class="nc" id="L64">        this.encoding = encoding;</span>
+<span class="nc" id="L65">    }</span>
+
+    public static HttpRequestBody json(String json, String encoding) {
+        try {
+<span class="nc" id="L69">            return new HttpRequestBody(json.getBytes(encoding), ContentType.JSON, encoding);</span>
+<span class="nc" id="L70">        } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L71">            throw new IllegalArgumentException(&quot;illegal encoding &quot; + encoding, e);</span>
+        }
+    }
+
+    public static HttpRequestBody xml(String xml, String encoding) {
+        try {
+<span class="nc" id="L77">            return new HttpRequestBody(xml.getBytes(encoding), ContentType.XML, encoding);</span>
+<span class="nc" id="L78">        } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L79">            throw new IllegalArgumentException(&quot;illegal encoding &quot; + encoding, e);</span>
+        }
+    }
+
+    public static HttpRequestBody custom(byte[] body, String contentType, String encoding) {
+<span class="nc" id="L84">        return new HttpRequestBody(body, contentType, encoding);</span>
+    }
+
+    public static HttpRequestBody form(Map&lt;String,Object&gt; params, String encoding){
+<span class="nc" id="L88">        List&lt;NameValuePair&gt; nameValuePairs = new ArrayList&lt;NameValuePair&gt;(params.size());</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        for (Map.Entry&lt;String, Object&gt; entry : params.entrySet()) {</span>
+<span class="nc" id="L90">            nameValuePairs.add(new BasicNameValuePair(entry.getKey(), String.valueOf(entry.getValue())));</span>
+<span class="nc" id="L91">        }</span>
+        try {
+<span class="nc" id="L93">            return new HttpRequestBody(URLEncodedUtils.format(nameValuePairs, encoding).getBytes(encoding), ContentType.FORM, encoding);</span>
+<span class="nc" id="L94">        } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L95">            throw new IllegalArgumentException(&quot;illegal encoding &quot; + encoding, e);</span>
+        }
+    }
+
+    public byte[] getBody() {
+<span class="nc" id="L100">        return body;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
