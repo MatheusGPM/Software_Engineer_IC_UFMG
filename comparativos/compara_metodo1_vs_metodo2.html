@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Comparação de Cobertura — Método 1 vs Método 2</title>
+<style>
+  body { font-family: sans-serif; margin: 16px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+  .card h2 { margin: 0 0 8px; font-size: 16px; }
+  img { width: 100%; height: auto; border: 1px solid #eee; }
+  .note { color: #555; font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <h1>Comparação de Cobertura</h1>
+  <div class="grid">
+    <div class="card">
+      <h2>Método 1 — HttpClientDownloader (LLM)</h2>
+      <img src="../prints_cobertura_testes/cobertura_test1.png" alt="Cobertura Método 1">
+      <div class="note">Fonte: data/cobertura_test1/ (print salvo em prints_cobertura_testes/)</div>
+    </div>
+    <div class="card">
+      <h2>Método 2 — HttpUriRequestConverter (LLM)</h2>
+      <img src="../prints_cobertura_testes/cobertura_metodo2_llm.png" alt="Cobertura Método 2">
+      <div class="note">Fonte: data/webmagic_com_testes_LLM/metodo2/com_llm/ (print salvo em prints_cobertura_testes/)</div>
+    </div>
+  </div>
+</body>
+</html>
