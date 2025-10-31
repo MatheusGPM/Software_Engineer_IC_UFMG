@@ -1,0 +1,4 @@
+Método alvo: us.codecraft.webmagic.downloader.HttpUriRequestConverter#convert(Request, Site)
+Motivação: Preparar cenário para geração de teste por LLM (substituir o teste dos devs).
+Função do método: converte Request/Site -> HttpUriRequest (método, headers, cookies, body/form/charset, proxy).
+Como foi excluído: teste original movido para webmagic-core/src/test_excluido/java/.../HttpUriRequestConverterTest.java na branch exp/llm-tests-metodo2 do submódulo webmagic_com_testes_LLM.
