@@ -1,1 +1,6 @@
 target/
+
+# local repos
+webmagic-develop/
+jsoup1-main/
+*.zip
