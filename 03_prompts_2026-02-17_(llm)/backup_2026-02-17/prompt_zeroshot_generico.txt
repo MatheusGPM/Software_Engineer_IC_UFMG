@@ -1,0 +1,20 @@
+Tarefa
+Gere testes automatizados para **[insira o método aqui]** com base no código-fonte anexado.
+
+Requisitos mínimos
+- Não modifique o código de produção.
+- Testes determinísticos (sem internet/FS/relógio real; evite sleeps arbitrários).
+- Não adicione dependências novas; use apenas o que já existe no projeto.
+- Isole dependências externas com dublês/mocks ou servidor local embutido; finalize recursos no teardown.
+- Cubra, no mínimo: caminho de sucesso, caminho de erro/exception e casos de fronteira/validação.
+- Valide entradas, saídas observáveis, efeitos colaterais e interações relevantes.
+
+Entrega
+- Linguagem/framework: **[insira linguagem/framework aqui]**.
+- Local dos arquivos de teste: **[insira caminho/pasta de testes aqui]**.
+- Nome do arquivo de teste: **[insira nome do arquivo aqui]**.
+- Forneça o(s) arquivo(s) completo(s) e prontos para execução.
+
+Critérios de aceitação
+- Os testes compilam e executam no projeto anexado.
+- Os asserts verificam o comportamento essencial de **[insira o método aqui]** conforme a implementação atual.
