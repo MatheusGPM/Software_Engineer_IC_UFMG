@@ -1,52 +1,37 @@
-
-
-
 # Software_Engineer_IC_UFMG
-Repositório do Projeto IC (WebMagic + LLM + JaCoCo).
-## Repositories:
-- byte-buddy
-- commons-io*
-- commons-lang*
-- google-java-format*
-- gson*
-- javaparser
-- jimfs
-- jitwatch
-- jsoup*
-- zxing
 
-## 3) Métodos escolhidos + testes (DEV)
+Repositório do projeto de Iniciação Científica (IC) focado em **geração de testes unitários com LLMs** e **comparação de cobertura (JaCoCo)** em projetos Java (Maven/JUnit).
 
-1) `UrlUtils#canonicalizeUrl`  
-- Teste: `UrlUtilsTest`
+## Objetivo
+1) Medir a cobertura de testes (baseline) do projeto-alvo.  
+2) Remover/alterar testes de desenvolvedores para um método-alvo.  
+3) Gerar novos testes com LLM (prompts versionados).  
+4) Comparar cobertura e registrar evidências (CSV/XML/prints).
 
-2) `DuplicateRemovedScheduler#push`  
-- Teste: `DuplicateRemovedSchedulerTest` *(pode falhar em Java 17+ por Mockito antigo)*
+## Estrutura do repositório
+- `01_docs_2026-02-17_(comparativos-e-prints)`: prints e comparações visuais.
+- `02_dados_2026-02-17_(jacoco-e-marcadores)`: XMLs do JaCoCo e arquivos “marcadores”.
+- `03_prompts_2026-02-17_(llm)`: prompts usados para geração de testes.
+- `04_resultados_2026-02-17_(...)`: resultados consolidados (CSVs, etc.).
+- `05_scripts_2026-02-17_(pipeline)`: scripts do pipeline (extração, cobertura, relatórios).
+- `06_metodos_2026-02-17_(webmagic-selecionados)`: lista/marcadores de métodos escolhidos.
+- `07_repos_2026-02-17_(webmagic-orig-e-llm)`: variantes/referências do repositório-alvo.
+- `08_repos_2026-02-18_(webmagic-sem-devtest-metodo1)`: variante do repo sem testes DEV do método 1.
 
-3) `HttpUriRequestConverter#convert`  
-- Teste: `HttpUriRequestConverterTest`
+## Como reproduzir (resumo)
+> Ajuste os caminhos conforme seu ambiente (Windows/WSL/Linux).
 
-4) `RegexSelector#select`  
-- Teste: `RegexSelectorTest`
+1) Entrar no repo do projeto-alvo (ex.: WebMagic) e rodar testes com cobertura:
+- `mvn test`
+- `mvn test jacoco:report`
 
-5) `SimpleProxyProvider#getProxy`  
-- Teste: `SimpleProxyProviderTest`
+2) Exportar/armazenar o XML do JaCoCo e resultados na pasta `02_dados_...`.
 
-6) `FilePipeline#process`  
-- Teste: `FilePipelineTest`
+3) Rodar os scripts do pipeline (pasta `05_scripts_...`) para:
+- identificar cobertura por método,
+- selecionar métodos-alvo,
+- consolidar resultados em CSV.
 
-### Por que escolhemos esses 6 métodos (bem resumido)
-
-**Critérios gerais:**
-- Têm **testes dos desenvolvedores** (comparação justa com LLM).
-- São **tipos diferentes** no WebMagic (utils, scheduler, downloader, selector, proxy, pipeline).
-- Cobrem lógicas variadas (URL/string, deduplicação, conversão HTTP, regex, escolha de proxy, I/O).
-
-**Motivos por método:**
-- URL utilitária e determinística  
-- Deduplicação (regras GET vs POST)  
-- Adapter/conversão para HTTP  
-- Extração por regex  
-- Seleção/rotação de proxy  
-- Pipeline com escrita (I/O)
+## Como citar
+Se usar este repositório em relatório/artigo, use o arquivo `CITATION.cff`.
 
