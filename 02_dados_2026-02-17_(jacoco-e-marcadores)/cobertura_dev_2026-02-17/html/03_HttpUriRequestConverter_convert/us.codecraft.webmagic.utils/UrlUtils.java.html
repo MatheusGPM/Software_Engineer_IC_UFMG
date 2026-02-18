@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UrlUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.utils</a> &gt; <span class="el_source">UrlUtils.java</span></div><h1>UrlUtils.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.utils;
+
+import org.apache.commons.lang3.StringUtils;
+import us.codecraft.webmagic.Request;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * url and html utils.
+ *
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @since 0.1.0
+ */
+<span class="nc" id="L21">public class UrlUtils {</span>
+
+    /**
+     * canonicalizeUrl
+     * &lt;br&gt;
+     * Borrowed from Jsoup.
+     *
+     * @param url url
+     * @param refer refer
+     * @return canonicalizeUrl
+     */
+    public static String canonicalizeUrl(String url, String refer) {
+        URL base;
+        try {
+            try {
+<span class="nc" id="L36">                base = new URL(refer);</span>
+<span class="nc" id="L37">            } catch (MalformedURLException e) {</span>
+                // the base is unsuitable, but the attribute may be abs on its own, so try that
+<span class="nc" id="L39">                URL abs = new URL(refer);</span>
+<span class="nc" id="L40">                return abs.toExternalForm();</span>
+<span class="nc" id="L41">            }</span>
+            // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+<span class="nc bnc" id="L43" title="All 2 branches missed.">            if (url.startsWith(&quot;?&quot;))</span>
+<span class="nc" id="L44">                url = base.getPath() + url;</span>
+<span class="nc" id="L45">            URL abs = new URL(base, url);</span>
+<span class="nc" id="L46">            return abs.toExternalForm();</span>
+<span class="nc" id="L47">        } catch (MalformedURLException e) {</span>
+<span class="nc" id="L48">            return &quot;&quot;;</span>
+        }
+    }
+
+    /**
+     *
+     * @param url url
+     * @return new url
+     * @deprecated
+     */
+    public static String encodeIllegalCharacterInUrl(String url) {
+<span class="nc" id="L59">        return url.replace(&quot; &quot;, &quot;%20&quot;);</span>
+    }
+
+    public static String fixIllegalCharacterInUrl(String url) {
+        //TODO more charator support
+<span class="fc" id="L64">        return url.replace(&quot; &quot;, &quot;%20&quot;).replaceAll(&quot;#+&quot;, &quot;#&quot;);</span>
+    }
+
+    public static String getHost(String url) {
+<span class="nc" id="L68">        String host = url;</span>
+<span class="nc" id="L69">        int i = StringUtils.ordinalIndexOf(url, &quot;/&quot;, 3);</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (i &gt; 0) {</span>
+<span class="nc" id="L71">            host = StringUtils.substring(url, 0, i);</span>
+        }
+<span class="nc" id="L73">        return host;</span>
+    }
+
+<span class="fc" id="L76">    private static Pattern patternForProtocal = Pattern.compile(&quot;[\\w]+://&quot;);</span>
+
+    public static String removeProtocol(String url) {
+<span class="nc" id="L79">        return patternForProtocal.matcher(url).replaceAll(&quot;&quot;);</span>
+    }
+
+    public static String getDomain(String url) {
+<span class="nc" id="L83">        String domain = removeProtocol(url);</span>
+<span class="nc" id="L84">        int i = StringUtils.indexOf(domain, &quot;/&quot;, 1);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (i &gt; 0) {</span>
+<span class="nc" id="L86">            domain = StringUtils.substring(domain, 0, i);</span>
+        }
+<span class="nc" id="L88">        return removePort(domain);</span>
+    }
+
+    public static String removePort(String domain) {
+<span class="nc" id="L92">        int portIndex = domain.indexOf(&quot;:&quot;);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (portIndex != -1) {</span>
+<span class="nc" id="L94">            return domain.substring(0, portIndex);</span>
+        }else {
+<span class="nc" id="L96">            return domain;</span>
+        }
+    }
+
+    public static List&lt;Request&gt; convertToRequests(Collection&lt;String&gt; urls) {
+<span class="nc" id="L101">        List&lt;Request&gt; requestList = new ArrayList&lt;Request&gt;(urls.size());</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        for (String url : urls) {</span>
+<span class="nc" id="L103">            requestList.add(new Request(url));</span>
+<span class="nc" id="L104">        }</span>
+<span class="nc" id="L105">        return requestList;</span>
+    }
+
+    public static List&lt;String&gt; convertToUrls(Collection&lt;Request&gt; requests) {
+<span class="nc" id="L109">        List&lt;String&gt; urlList = new ArrayList&lt;String&gt;(requests.size());</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        for (Request request : requests) {</span>
+<span class="nc" id="L111">            urlList.add(request.getUrl());</span>
+<span class="nc" id="L112">        }</span>
+<span class="nc" id="L113">        return urlList;</span>
+    }
+
+<span class="fc" id="L116">    private static final Pattern patternForCharset = Pattern.compile(&quot;charset\\s*=\\s*['\&quot;]*([^\\s;'\&quot;]*)&quot;, Pattern.CASE_INSENSITIVE);</span>
+
+    public static String getCharset(String contentType) {
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        if (contentType == null) {</span>
+<span class="nc" id="L120">            return null;</span>
+        }
+
+<span class="nc" id="L123">        Matcher matcher = patternForCharset.matcher(contentType);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (matcher.find()) {</span>
+<span class="nc" id="L125">            String charset = matcher.group(1);</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            if (Charset.isSupported(charset)) {</span>
+<span class="nc" id="L127">                return charset;</span>
+            }
+        }
+<span class="nc" id="L130">        return null;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

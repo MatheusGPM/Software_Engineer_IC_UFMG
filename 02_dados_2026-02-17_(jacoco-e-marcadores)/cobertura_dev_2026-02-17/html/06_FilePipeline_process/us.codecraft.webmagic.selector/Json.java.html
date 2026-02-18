@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Json.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.selector</a> &gt; <span class="el_source">Json.java</span></div><h1>Json.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.selector;
+
+import com.alibaba.fastjson.JSON;
+import us.codecraft.xsoup.XTokenQueue;
+
+import java.util.List;
+
+/**
+ * parse json
+ * @author code4crafter@gmail.com
+ * @since 0.5.0
+ */
+public class Json extends PlainText {
+
+    public Json(List&lt;String&gt; strings) {
+<span class="nc" id="L16">        super(strings);</span>
+<span class="nc" id="L17">    }</span>
+
+    public Json(String text) {
+<span class="nc" id="L20">        super(text);</span>
+<span class="nc" id="L21">    }</span>
+
+    /**
+     * remove padding for JSONP
+     * @param padding padding
+     * @return json after padding removed
+     */
+    public Json removePadding(String padding) {
+<span class="nc" id="L29">        String text = getFirstSourceText();</span>
+<span class="nc" id="L30">        XTokenQueue tokenQueue = new XTokenQueue(text);</span>
+<span class="nc" id="L31">        tokenQueue.consumeWhitespace();</span>
+<span class="nc" id="L32">        tokenQueue.consume(padding);</span>
+<span class="nc" id="L33">        tokenQueue.consumeWhitespace();</span>
+<span class="nc" id="L34">        String chompBalanced = tokenQueue.chompBalancedNotInQuotes('(', ')');</span>
+<span class="nc" id="L35">        return new Json(chompBalanced);</span>
+    }
+
+    public &lt;T&gt; T toObject(Class&lt;T&gt; clazz) {
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (getFirstSourceText() == null) {</span>
+<span class="nc" id="L40">            return null;</span>
+        }
+<span class="nc" id="L42">        return JSON.parseObject(getFirstSourceText(), clazz);</span>
+    }
+
+    public &lt;T&gt; List&lt;T&gt; toList(Class&lt;T&gt; clazz) {
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (getFirstSourceText() == null) {</span>
+<span class="nc" id="L47">            return null;</span>
+        }
+<span class="nc" id="L49">        return JSON.parseArray(getFirstSourceText(), clazz);</span>
+    }
+
+    @Override
+    public Selectable jsonPath(String jsonPath) {
+<span class="nc" id="L54">        JsonPathSelector jsonPathSelector = new JsonPathSelector(jsonPath);</span>
+<span class="nc" id="L55">        return selectList(jsonPathSelector,getSourceTexts());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Site.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic</a> &gt; <span class="el_source">Site.java</span></div><h1>Site.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import us.codecraft.webmagic.utils.HttpConstant;
+
+/**
+ * Object contains setting for crawler.&lt;br&gt;
+ *
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @see us.codecraft.webmagic.processor.PageProcessor
+ * @since 0.1.0
+ */
+<span class="fc" id="L19">public class Site {</span>
+
+    private String domain;
+
+    private String userAgent;
+
+<span class="fc" id="L25">    private Map&lt;String, String&gt; defaultCookies = new LinkedHashMap&lt;String, String&gt;();</span>
+
+<span class="fc" id="L27">    private Map&lt;String, Map&lt;String, String&gt;&gt; cookies = new HashMap&lt;String, Map&lt;String, String&gt;&gt;();</span>
+
+    private String charset;
+
+    private String defaultCharset;
+
+<span class="fc" id="L33">    private int sleepTime = 5000;</span>
+
+<span class="fc" id="L35">    private int retryTimes = 0;</span>
+
+<span class="fc" id="L37">    private int cycleRetryTimes = 0;</span>
+
+<span class="fc" id="L39">    private int retrySleepTime = 1000;</span>
+
+<span class="fc" id="L41">    private int timeOut = 5000;</span>
+
+<span class="fc" id="L43">    private static final Set&lt;Integer&gt; DEFAULT_STATUS_CODE_SET = new HashSet&lt;Integer&gt;();</span>
+
+<span class="fc" id="L45">    private Set&lt;Integer&gt; acceptStatCode = DEFAULT_STATUS_CODE_SET;</span>
+
+<span class="fc" id="L47">    private Map&lt;String, String&gt; headers = new HashMap&lt;String, String&gt;();</span>
+
+<span class="fc" id="L49">    private boolean useGzip = true;</span>
+
+<span class="fc" id="L51">    private boolean disableCookieManagement = false;</span>
+
+    static {
+<span class="fc" id="L54">        DEFAULT_STATUS_CODE_SET.add(HttpConstant.StatusCode.CODE_200);</span>
+<span class="fc" id="L55">    }</span>
+
+    /**
+     * new a Site
+     *
+     * @return new site
+     */
+    public static Site me() {
+<span class="fc" id="L63">        return new Site();</span>
+    }
+
+    /**
+     * Add a cookie with domain {@link #getDomain()}
+     *
+     * @param name name
+     * @param value value
+     * @return this
+     */
+    public Site addCookie(String name, String value) {
+<span class="nc" id="L74">        defaultCookies.put(name, value);</span>
+<span class="nc" id="L75">        return this;</span>
+    }
+
+    /**
+     * Add a cookie with specific domain.
+     *
+     * @param domain domain
+     * @param name name
+     * @param value value
+     * @return this
+     */
+    public Site addCookie(String domain, String name, String value) {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (!cookies.containsKey(domain)){</span>
+<span class="nc" id="L88">            cookies.put(domain,new HashMap&lt;String, String&gt;());</span>
+        }
+<span class="nc" id="L90">        cookies.get(domain).put(name, value);</span>
+<span class="nc" id="L91">        return this;</span>
+    }
+
+    /**
+     * set user agent
+     *
+     * @param userAgent userAgent
+     * @return this
+     */
+    public Site setUserAgent(String userAgent) {
+<span class="nc" id="L101">        this.userAgent = userAgent;</span>
+<span class="nc" id="L102">        return this;</span>
+    }
+
+    /**
+     * get cookies
+     *
+     * @return get cookies
+     */
+    public Map&lt;String, String&gt; getCookies() {
+<span class="nc" id="L111">        return defaultCookies;</span>
+    }
+
+    /**
+     * get cookies of all domains
+     *
+     * @return get cookies
+     */
+    public Map&lt;String,Map&lt;String, String&gt;&gt; getAllCookies() {
+<span class="nc" id="L120">        return cookies;</span>
+    }
+
+    /**
+     * get user agent
+     *
+     * @return user agent
+     */
+    public String getUserAgent() {
+<span class="nc" id="L129">        return userAgent;</span>
+    }
+
+    /**
+     * get domain
+     *
+     * @return get domain
+     */
+    public String getDomain() {
+<span class="nc" id="L138">        return domain;</span>
+    }
+
+    /**
+     * set the domain of site.
+     *
+     * @param domain domain
+     * @return this
+     */
+    public Site setDomain(String domain) {
+<span class="nc" id="L148">        this.domain = domain;</span>
+<span class="nc" id="L149">        return this;</span>
+    }
+
+    /**
+     * Set charset of page manually.&lt;br&gt;
+     * When charset is not set or set to null, it can be auto detected by Http header.
+     *
+     * @param charset charset
+     * @return this
+     */
+    public Site setCharset(String charset) {
+<span class="nc" id="L160">        this.charset = charset;</span>
+<span class="nc" id="L161">        return this;</span>
+    }
+
+    /**
+     * get charset set manually
+     *
+     * @return charset
+     */
+    public String getCharset() {
+<span class="nc" id="L170">        return charset;</span>
+    }
+
+    /**
+     * Set default charset of page.
+     *
+     * When charset detect failed, use this default charset.
+     *
+     * @param defaultCharset the default charset
+     * @return this
+     * @since 0.9.0
+     */
+    public Site setDefaultCharset(String defaultCharset) {
+<span class="nc" id="L183">        this.defaultCharset = defaultCharset;</span>
+<span class="nc" id="L184">        return this;</span>
+    }
+
+    /**
+     * The default charset if charset detected failed.
+     *
+     * @return the defulat charset
+     * @since 0.9.0
+     */
+    public String getDefaultCharset() {
+<span class="nc" id="L194">        return defaultCharset;</span>
+    }
+
+    public int getTimeOut() {
+<span class="nc" id="L198">        return timeOut;</span>
+    }
+
+    /**
+     * set timeout for downloader in ms
+     *
+     * @param timeOut timeOut
+     * @return this
+     */
+    public Site setTimeOut(int timeOut) {
+<span class="nc" id="L208">        this.timeOut = timeOut;</span>
+<span class="nc" id="L209">        return this;</span>
+    }
+
+    /**
+     * Set acceptStatCode.&lt;br&gt;
+     * When status code of http response is in acceptStatCodes, it will be processed.&lt;br&gt;
+     * {200} by default.&lt;br&gt;
+     * It is not necessarily to be set.&lt;br&gt;
+     *
+     * @param acceptStatCode acceptStatCode
+     * @return this
+     */
+    public Site setAcceptStatCode(Set&lt;Integer&gt; acceptStatCode) {
+<span class="nc" id="L222">        this.acceptStatCode = acceptStatCode;</span>
+<span class="nc" id="L223">        return this;</span>
+    }
+
+    /**
+     * get acceptStatCode
+     *
+     * @return acceptStatCode
+     */
+    public Set&lt;Integer&gt; getAcceptStatCode() {
+<span class="nc" id="L232">        return acceptStatCode;</span>
+    }
+
+    /**
+     * Set the interval between the processing of two pages.&lt;br&gt;
+     * Time unit is milliseconds.&lt;br&gt;
+     *
+     * @param sleepTime sleepTime
+     * @return this
+     */
+    public Site setSleepTime(int sleepTime) {
+<span class="nc" id="L243">        this.sleepTime = sleepTime;</span>
+<span class="nc" id="L244">        return this;</span>
+    }
+
+    /**
+     * Get the interval between the processing of two pages.&lt;br&gt;
+     * Time unit is milliseconds.&lt;br&gt;
+     *
+     * @return the interval between the processing of two pages,
+     */
+    public int getSleepTime() {
+<span class="nc" id="L254">        return sleepTime;</span>
+    }
+
+    /**
+     * Get retry times immediately when download fail, 0 by default.&lt;br&gt;
+     *
+     * @return retry times when download fail
+     */
+    public int getRetryTimes() {
+<span class="nc" id="L263">        return retryTimes;</span>
+    }
+
+    public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L267">        return headers;</span>
+    }
+
+    /**
+     * Put an Http header for downloader. &lt;br&gt;
+     * Use {@link #addCookie(String, String)} for cookie and {@link #setUserAgent(String)} for user-agent. &lt;br&gt;
+     *
+     * @param key   key of http header, there are some keys constant in {@link HttpConstant.Header}
+     * @param value value of header
+     * @return this
+     */
+    public Site addHeader(String key, String value) {
+<span class="nc" id="L279">        headers.put(key, value);</span>
+<span class="nc" id="L280">        return this;</span>
+    }
+
+    /**
+     * Set retry times when download fail, 0 by default.&lt;br&gt;
+     *
+     * @param retryTimes retryTimes
+     * @return this
+     */
+    public Site setRetryTimes(int retryTimes) {
+<span class="nc" id="L290">        this.retryTimes = retryTimes;</span>
+<span class="nc" id="L291">        return this;</span>
+    }
+
+    /**
+     * When cycleRetryTimes is more than 0, it will add back to scheduler and try download again. &lt;br&gt;
+     *
+     * @return retry times when download fail
+     */
+    public int getCycleRetryTimes() {
+<span class="nc" id="L300">        return cycleRetryTimes;</span>
+    }
+
+    /**
+     * Set cycleRetryTimes times when download fail, 0 by default. &lt;br&gt;
+     *
+     * @param cycleRetryTimes cycleRetryTimes
+     * @return this
+     */
+    public Site setCycleRetryTimes(int cycleRetryTimes) {
+<span class="nc" id="L310">        this.cycleRetryTimes = cycleRetryTimes;</span>
+<span class="nc" id="L311">        return this;</span>
+    }
+
+    public boolean isUseGzip() {
+<span class="nc" id="L315">        return useGzip;</span>
+    }
+
+    public int getRetrySleepTime() {
+<span class="nc" id="L319">        return retrySleepTime;</span>
+    }
+
+    /**
+     * Set retry sleep times when download fail, 1000 by default. &lt;br&gt;
+     *
+     * @param retrySleepTime retrySleepTime
+     * @return this
+     */
+    public Site setRetrySleepTime(int retrySleepTime) {
+<span class="nc" id="L329">        this.retrySleepTime = retrySleepTime;</span>
+<span class="nc" id="L330">        return this;</span>
+    }
+
+    /**
+     * Whether use gzip. &lt;br&gt;
+     * Default is true, you can set it to false to disable gzip.
+     *
+     * @param useGzip useGzip
+     * @return this
+     */
+    public Site setUseGzip(boolean useGzip) {
+<span class="nc" id="L341">        this.useGzip = useGzip;</span>
+<span class="nc" id="L342">        return this;</span>
+    }
+
+    public boolean isDisableCookieManagement() {
+<span class="nc" id="L346">        return disableCookieManagement;</span>
+    }
+
+    /**
+     * Downloader is supposed to store response cookie.
+     * Disable it to ignore all cookie fields and stay clean.
+     * Warning: Set cookie will still NOT work if disableCookieManagement is true.
+     * @param disableCookieManagement disableCookieManagement
+     * @return this
+     */
+    public Site setDisableCookieManagement(boolean disableCookieManagement) {
+<span class="nc" id="L357">        this.disableCookieManagement = disableCookieManagement;</span>
+<span class="nc" id="L358">        return this;</span>
+    }
+
+    public Task toTask() {
+<span class="fc" id="L362">        return new Task() {</span>
+            @Override
+            public String getUUID() {
+<span class="nc" id="L365">                String uuid = Site.this.getDomain();</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">                if (uuid == null) {</span>
+<span class="nc" id="L367">                    uuid = UUID.randomUUID().toString();</span>
+                }
+<span class="nc" id="L369">                return uuid;</span>
+            }
+
+            @Override
+            public Site getSite() {
+<span class="nc" id="L374">                return Site.this;</span>
+            }
+        };
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L381" title="All 2 branches missed.">        if (this == o) return true;</span>
+<span class="nc bnc" id="L382" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+
+<span class="nc" id="L384">        Site site = (Site) o;</span>
+
+<span class="nc bnc" id="L386" title="All 2 branches missed.">        if (cycleRetryTimes != site.cycleRetryTimes) return false;</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">        if (retryTimes != site.retryTimes) return false;</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">        if (sleepTime != site.sleepTime) return false;</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">        if (timeOut != site.timeOut) return false;</span>
+<span class="nc bnc" id="L390" title="All 6 branches missed.">        if (acceptStatCode != null ? !acceptStatCode.equals(site.acceptStatCode) : site.acceptStatCode != null)</span>
+<span class="nc" id="L391">            return false;</span>
+<span class="nc bnc" id="L392" title="All 6 branches missed.">        if (charset != null ? !charset.equals(site.charset) : site.charset != null) return false;</span>
+<span class="nc bnc" id="L393" title="All 6 branches missed.">        if (defaultCookies != null ? !defaultCookies.equals(site.defaultCookies) : site.defaultCookies != null)</span>
+<span class="nc" id="L394">            return false;</span>
+<span class="nc bnc" id="L395" title="All 6 branches missed.">        if (domain != null ? !domain.equals(site.domain) : site.domain != null) return false;</span>
+<span class="nc bnc" id="L396" title="All 6 branches missed.">        if (headers != null ? !headers.equals(site.headers) : site.headers != null) return false;</span>
+<span class="nc bnc" id="L397" title="All 6 branches missed.">        if (userAgent != null ? !userAgent.equals(site.userAgent) : site.userAgent != null) return false;</span>
+
+<span class="nc" id="L399">        return true;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc bnc" id="L404" title="All 2 branches missed.">        int result = domain != null ? domain.hashCode() : 0;</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">        result = 31 * result + (userAgent != null ? userAgent.hashCode() : 0);</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">        result = 31 * result + (defaultCookies != null ? defaultCookies.hashCode() : 0);</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">        result = 31 * result + (charset != null ? charset.hashCode() : 0);</span>
+<span class="nc" id="L408">        result = 31 * result + sleepTime;</span>
+<span class="nc" id="L409">        result = 31 * result + retryTimes;</span>
+<span class="nc" id="L410">        result = 31 * result + cycleRetryTimes;</span>
+<span class="nc" id="L411">        result = 31 * result + timeOut;</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">        result = 31 * result + (acceptStatCode != null ? acceptStatCode.hashCode() : 0);</span>
+<span class="nc bnc" id="L413" title="All 2 branches missed.">        result = 31 * result + (headers != null ? headers.hashCode() : 0);</span>
+<span class="nc" id="L414">        return result;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L419">        return &quot;Site{&quot; +</span>
+                &quot;domain='&quot; + domain + '\'' +
+                &quot;, userAgent='&quot; + userAgent + '\'' +
+                &quot;, cookies=&quot; + defaultCookies +
+                &quot;, charset='&quot; + charset + '\'' +
+                &quot;, sleepTime=&quot; + sleepTime +
+                &quot;, retryTimes=&quot; + retryTimes +
+                &quot;, cycleRetryTimes=&quot; + cycleRetryTimes +
+                &quot;, timeOut=&quot; + timeOut +
+                &quot;, acceptStatCode=&quot; + acceptStatCode +
+                &quot;, headers=&quot; + headers +
+                '}';
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

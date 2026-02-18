@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimplePageProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.processor</a> &gt; <span class="el_source">SimplePageProcessor.java</span></div><h1>SimplePageProcessor.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.processor;
+
+import us.codecraft.webmagic.Page;
+import us.codecraft.webmagic.Site;
+
+import java.util.List;
+
+/**
+ * A simple PageProcessor.
+ *
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @since 0.1.0
+ */
+public class SimplePageProcessor implements PageProcessor {
+
+    private String urlPattern;
+
+    private Site site;
+
+<span class="nc" id="L20">    public SimplePageProcessor(String urlPattern) {</span>
+<span class="nc" id="L21">        this.site = Site.me();</span>
+        //compile &quot;*&quot; expression to regex
+<span class="nc" id="L23">        this.urlPattern = &quot;(&quot; + urlPattern.replace(&quot;.&quot;, &quot;\\.&quot;).replace(&quot;*&quot;, &quot;[^\&quot;'#]*&quot;) + &quot;)&quot;;</span>
+
+<span class="nc" id="L25">    }</span>
+
+    @Override
+    public void process(Page page) {
+<span class="nc" id="L29">        List&lt;String&gt; requests = page.getHtml().links().regex(urlPattern).all();</span>
+        //add urls to fetch
+<span class="nc" id="L31">        page.addTargetRequests(requests);</span>
+        //extract by XPath
+<span class="nc" id="L33">        page.putField(&quot;title&quot;, page.getHtml().xpath(&quot;//title&quot;));</span>
+<span class="nc" id="L34">        page.putField(&quot;html&quot;, page.getHtml().toString());</span>
+        //extract by Readability
+<span class="nc" id="L36">        page.putField(&quot;content&quot;, page.getHtml().smartContent());</span>
+<span class="nc" id="L37">    }</span>
+
+    @Override
+    public Site getSite() {
+        //settings
+<span class="nc" id="L42">        return site;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

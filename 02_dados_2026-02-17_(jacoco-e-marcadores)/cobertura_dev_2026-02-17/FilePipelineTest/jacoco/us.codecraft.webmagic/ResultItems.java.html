@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResultItems.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic</a> &gt; <span class="el_source">ResultItems.java</span></div><h1>ResultItems.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Object contains extract results.&lt;br&gt;
+ * It is contained in Page and will be processed in pipeline.
+ *
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @since 0.1.0
+ * @see Page
+ * @see us.codecraft.webmagic.pipeline.Pipeline
+ */
+<span class="fc" id="L15">public class ResultItems {</span>
+
+<span class="fc" id="L17">    private Map&lt;String, Object&gt; fields = new LinkedHashMap&lt;String, Object&gt;();</span>
+
+    private Request request;
+
+    private boolean skip;
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public &lt;T&gt; T get(String key) {
+<span class="nc" id="L25">        Object o = fields.get(key);</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        if (o == null) {</span>
+<span class="nc" id="L27">            return null;</span>
+        }
+<span class="nc" id="L29">        return (T) fields.get(key);</span>
+    }
+
+    public Map&lt;String, Object&gt; getAll() {
+<span class="nc" id="L33">        return fields;</span>
+    }
+
+    public &lt;T&gt; ResultItems put(String key, T value) {
+<span class="fc" id="L37">        fields.put(key, value);</span>
+<span class="fc" id="L38">        return this;</span>
+    }
+
+    public Request getRequest() {
+<span class="fc" id="L42">        return request;</span>
+    }
+
+    public ResultItems setRequest(Request request) {
+<span class="fc" id="L46">        this.request = request;</span>
+<span class="fc" id="L47">        return this;</span>
+    }
+
+    /**
+     * Whether to skip the result.&lt;br&gt;
+     * Result which is skipped will not be processed by Pipeline.
+     *
+     * @return whether to skip the result
+     */
+    public boolean isSkip() {
+<span class="nc" id="L57">        return skip;</span>
+    }
+
+
+    /**
+     * Set whether to skip the result.&lt;br&gt;
+     * Result which is skipped will not be processed by Pipeline.
+     *
+     * @param skip whether to skip the result
+     * @return this
+     */
+    public ResultItems setSkip(boolean skip) {
+<span class="nc" id="L69">        this.skip = skip;</span>
+<span class="nc" id="L70">        return this;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L75">        return &quot;ResultItems{&quot; +</span>
+                &quot;fields=&quot; + fields +
+                &quot;, request=&quot; + request +
+                &quot;, skip=&quot; + skip +
+                '}';
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

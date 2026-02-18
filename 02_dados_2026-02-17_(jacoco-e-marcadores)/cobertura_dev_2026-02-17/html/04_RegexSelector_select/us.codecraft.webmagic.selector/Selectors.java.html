@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Selectors.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.selector</a> &gt; <span class="el_source">Selectors.java</span></div><h1>Selectors.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.selector;
+
+/**
+ * Convenient methods for selectors.&lt;br&gt;
+ *
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @since 0.2.1
+ */
+<span class="nc" id="L9">public abstract class Selectors {</span>
+
+    public static RegexSelector regex(String expr) {
+<span class="nc" id="L12">        return new RegexSelector(expr);</span>
+    }
+
+    public static RegexSelector regex(String expr, int group) {
+<span class="nc" id="L16">        return new RegexSelector(expr,group);</span>
+    }
+
+    public static SmartContentSelector smartContent() {
+<span class="nc" id="L20">        return new SmartContentSelector();</span>
+    }
+
+    public static SmartContentSelector smartContent(int threshold) {
+<span class="nc" id="L24">        return new SmartContentSelector(threshold);</span>
+    }
+
+    public static CssSelector $(String expr) {
+<span class="nc" id="L28">        return new CssSelector(expr);</span>
+    }
+
+    public static CssSelector $(String expr, String attrName) {
+<span class="nc" id="L32">        return new CssSelector(expr, attrName);</span>
+    }
+
+    public static XpathSelector xpath(String expr) {
+<span class="nc" id="L36">        return new XpathSelector(expr);</span>
+    }
+
+    /**
+     * @see #xpath(String)
+     * @param expr expr
+     * @return new selector
+     */
+    @Deprecated
+    public static XpathSelector xsoup(String expr) {
+<span class="nc" id="L46">        return new XpathSelector(expr);</span>
+    }
+
+    public static AndSelector and(Selector... selectors) {
+<span class="nc" id="L50">        return new AndSelector(selectors);</span>
+    }
+
+    public static OrSelector or(Selector... selectors) {
+<span class="nc" id="L54">        return new OrSelector(selectors);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
