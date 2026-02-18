@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Request.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic</a> &gt; <span class="el_source">Request.java</span></div><h1>Request.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic;
+
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import us.codecraft.webmagic.downloader.Downloader;
+import us.codecraft.webmagic.model.HttpRequestBody;
+import us.codecraft.webmagic.utils.Experimental;
+
+/**
+ * Object contains url to crawl.&lt;br&gt;
+ * It contains some additional information.&lt;br&gt;
+ *
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @since 0.1.0
+ */
+public class Request implements Serializable {
+
+    private static final long serialVersionUID = 2062192774891352043L;
+
+    public static final String CYCLE_TRIED_TIMES = &quot;_cycle_tried_times&quot;;
+
+    private String url;
+
+    private String method;
+
+    private HttpRequestBody requestBody;
+
+    /**
+     * this req use this downloader
+     */
+    private Downloader downloader;
+
+    /**
+     * Store additional information in extras.
+     */
+<span class="pc" id="L39">    private Map&lt;String, Object&gt; extras = new HashMap&lt;&gt;();</span>
+
+    /**
+     * cookies for current url, if not set use Site's cookies
+     */
+<span class="pc" id="L44">    private Map&lt;String, String&gt; cookies = new HashMap&lt;String, String&gt;();</span>
+
+<span class="pc" id="L46">    private Map&lt;String, String&gt; headers = new HashMap&lt;String, String&gt;();</span>
+
+    /**
+     * Priority of the request.&lt;br&gt;
+     * The bigger will be processed earlier. &lt;br&gt;
+     * @see us.codecraft.webmagic.scheduler.PriorityScheduler
+     */
+    private long priority;
+
+    /**
+     * When it is set to TRUE, the downloader will not try to parse response body to text.
+     *
+     */
+<span class="pc" id="L59">    private boolean binaryContent = false;</span>
+
+    private String charset;
+
+<span class="nc" id="L63">    public Request() {</span>
+<span class="nc" id="L64">    }</span>
+
+<span class="fc" id="L66">    public Request(String url) {</span>
+<span class="fc" id="L67">        this.url = url;</span>
+<span class="fc" id="L68">    }</span>
+
+    public long getPriority() {
+<span class="nc" id="L71">        return priority;</span>
+    }
+
+    /**
+     * Set the priority of request for sorting.&lt;br&gt;
+     * Need a scheduler supporting priority.&lt;br&gt;
+     * @see us.codecraft.webmagic.scheduler.PriorityScheduler
+     *
+     * @param priority priority
+     * @return this
+     */
+    @Experimental
+    public Request setPriority(long priority) {
+<span class="nc" id="L84">        this.priority = priority;</span>
+<span class="nc" id="L85">        return this;</span>
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public &lt;T&gt; T getExtra(String key) {
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        if (extras == null) {</span>
+<span class="nc" id="L91">            return null;</span>
+        }
+<span class="nc" id="L93">        return (T) extras.get(key);</span>
+    }
+
+    public &lt;T&gt; Request putExtra(String key, T value) {
+<span class="nc" id="L97">        extras.put(key, value);</span>
+<span class="nc" id="L98">        return this;</span>
+    }
+
+    public String getUrl() {
+<span class="fc" id="L102">        return url;</span>
+    }
+
+    public Map&lt;String, Object&gt; getExtras() {
+<span class="nc" id="L106">        return Collections.unmodifiableMap(extras);</span>
+    }
+
+    public Request setExtras(Map&lt;String, Object&gt; extras) {
+<span class="nc" id="L110">        this.extras.putAll(extras);</span>
+<span class="nc" id="L111">        return this;</span>
+    }
+
+    public Request setUrl(String url) {
+<span class="nc" id="L115">        this.url = url;</span>
+<span class="nc" id="L116">        return this;</span>
+    }
+
+    /**
+     * The http method of the request. Get for default.
+     * @return httpMethod
+     * @see us.codecraft.webmagic.utils.HttpConstant.Method
+     * @since 0.5.0
+     */
+    public String getMethod() {
+<span class="fc" id="L126">        return method;</span>
+    }
+
+    public Request setMethod(String method) {
+<span class="nc" id="L130">        this.method = method;</span>
+<span class="nc" id="L131">        return this;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        int result = url != null ? url.hashCode() : 0;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        result = 31 * result + (method != null ? method.hashCode() : 0);</span>
+<span class="nc" id="L138">        return result;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (this == o) return true;</span>
+<span class="nc bnc" id="L144" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+
+<span class="nc" id="L146">        Request request = (Request) o;</span>
+
+<span class="nc bnc" id="L148" title="All 6 branches missed.">        if (url != null ? !url.equals(request.url) : request.url != null) return false;</span>
+<span class="nc bnc" id="L149" title="All 4 branches missed.">        return method != null ? method.equals(request.method) : request.method == null;</span>
+    }
+
+    public Request addCookie(String name, String value) {
+<span class="nc" id="L153">        cookies.put(name, value);</span>
+<span class="nc" id="L154">        return this;</span>
+    }
+
+    public Request addHeader(String name, String value) {
+<span class="nc" id="L158">        headers.put(name, value);</span>
+<span class="nc" id="L159">        return this;</span>
+    }
+
+    public Map&lt;String, String&gt; getCookies() {
+<span class="fc" id="L163">        return cookies;</span>
+    }
+
+    public Map&lt;String, String&gt; getHeaders() {
+<span class="fc" id="L167">        return headers;</span>
+    }
+
+    public HttpRequestBody getRequestBody() {
+<span class="nc" id="L171">        return requestBody;</span>
+    }
+
+    public void setRequestBody(HttpRequestBody requestBody) {
+<span class="nc" id="L175">        this.requestBody = requestBody;</span>
+<span class="nc" id="L176">    }</span>
+
+    public boolean isBinaryContent() {
+<span class="nc" id="L179">        return binaryContent;</span>
+    }
+
+    public Downloader getDownloader() {
+<span class="nc" id="L183">        return downloader;</span>
+    }
+
+    public void setDownloader(Downloader downloader) {
+<span class="nc" id="L187">        this.downloader = downloader;</span>
+<span class="nc" id="L188">    }</span>
+
+    public Request setBinaryContent(boolean binaryContent) {
+<span class="nc" id="L191">        this.binaryContent = binaryContent;</span>
+<span class="nc" id="L192">        return this;</span>
+    }
+
+    public String getCharset() {
+<span class="nc" id="L196">        return charset;</span>
+    }
+
+    public Request setCharset(String charset) {
+<span class="nc" id="L200">        this.charset = charset;</span>
+<span class="nc" id="L201">        return this;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L206">        return &quot;Request{&quot; +</span>
+                &quot;url='&quot; + url + '\'' +
+                &quot;, method='&quot; + method + '\'' +
+                &quot;, extras=&quot; + extras +
+                &quot;, priority=&quot; + priority +
+                &quot;, headers=&quot; + headers +
+                &quot;, cookies=&quot;+ cookies+
+                '}';
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

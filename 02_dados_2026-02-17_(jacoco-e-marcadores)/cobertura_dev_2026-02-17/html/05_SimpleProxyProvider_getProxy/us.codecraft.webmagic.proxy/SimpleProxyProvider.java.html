@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimpleProxyProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.proxy</a> &gt; <span class="el_source">SimpleProxyProvider.java</span></div><h1>SimpleProxyProvider.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.proxy;
+
+import us.codecraft.webmagic.Page;
+import us.codecraft.webmagic.Request;
+import us.codecraft.webmagic.Task;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * A simple ProxyProvider. Provide proxy as round-robin without heartbeat and error check. It can be used when all proxies are stable.
+ * @author code4crafter@gmail.com
+ *         Date: 17/4/16
+ *         Time: 10:18
+ * @since 0.7.0
+ */
+public class SimpleProxyProvider implements ProxyProvider {
+
+    private final List&lt;Proxy&gt; proxies;
+
+    private final AtomicInteger pointer;
+
+    public SimpleProxyProvider(List&lt;Proxy&gt; proxies) {
+<span class="fc" id="L26">        this(proxies, new AtomicInteger(-1));</span>
+<span class="fc" id="L27">    }</span>
+
+<span class="fc" id="L29">    private SimpleProxyProvider(List&lt;Proxy&gt; proxies, AtomicInteger pointer) {</span>
+<span class="fc" id="L30">        this.proxies = proxies;</span>
+<span class="fc" id="L31">        this.pointer = pointer;</span>
+<span class="fc" id="L32">    }</span>
+
+    public static SimpleProxyProvider from(Proxy... proxies) {
+<span class="fc" id="L35">        List&lt;Proxy&gt; proxiesTemp = new ArrayList&lt;Proxy&gt;(proxies.length);</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        for (Proxy proxy : proxies) {</span>
+<span class="fc" id="L37">            proxiesTemp.add(proxy);</span>
+        }
+<span class="fc" id="L39">        return new SimpleProxyProvider(Collections.unmodifiableList(proxiesTemp));</span>
+    }
+
+    @Override
+    public void returnProxy(Proxy proxy, Page page, Task task) {
+        //Donothing
+<span class="nc" id="L45">    }</span>
+
+    @Override
+    public Proxy getProxy(Request request, Task task) {
+<span class="fc" id="L49">        return proxies.get(incrForLoop());</span>
+    }
+
+    private int incrForLoop() {
+<span class="fc" id="L53">        int p = pointer.incrementAndGet();</span>
+<span class="fc" id="L54">        int size = proxies.size();</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (p &lt; size) {</span>
+<span class="fc" id="L56">            return p;</span>
+        }
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        while (!pointer.compareAndSet(p, p % size)) {</span>
+<span class="nc" id="L59">            p = pointer.get();</span>
+        }
+<span class="fc" id="L61">        return p % size;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

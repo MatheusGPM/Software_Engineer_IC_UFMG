@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Spider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic</a> &gt; <span class="el_source">Spider.java</span></div><h1>Spider.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic;
+
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.SerializationUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import us.codecraft.webmagic.downloader.Downloader;
+import us.codecraft.webmagic.downloader.HttpClientDownloader;
+import us.codecraft.webmagic.pipeline.CollectorPipeline;
+import us.codecraft.webmagic.pipeline.ConsolePipeline;
+import us.codecraft.webmagic.pipeline.Pipeline;
+import us.codecraft.webmagic.pipeline.ResultItemsCollectorPipeline;
+import us.codecraft.webmagic.processor.PageProcessor;
+import us.codecraft.webmagic.scheduler.QueueScheduler;
+import us.codecraft.webmagic.scheduler.Scheduler;
+import us.codecraft.webmagic.thread.CountableThreadPool;
+import us.codecraft.webmagic.utils.UrlUtils;
+import us.codecraft.webmagic.utils.WMCollections;
+
+/**
+ * Entrance of a crawler.&lt;br&gt;
+ * A spider contains four modules: Downloader, Scheduler, PageProcessor and
+ * Pipeline.&lt;br&gt;
+ * Every module is a field of Spider. &lt;br&gt;
+ * The modules are defined in interface. &lt;br&gt;
+ * You can customize a spider with various implementations of them. &lt;br&gt;
+ * Examples: &lt;br&gt;
+ * &lt;br&gt;
+ * A simple crawler: &lt;br&gt;
+ * Spider.create(new SimplePageProcessor(&quot;http://my.oschina.net/&quot;,
+ * &quot;http://my.oschina.net/*blog/*&quot;)).run();&lt;br&gt;
+ * &lt;br&gt;
+ * Store results to files by FilePipeline: &lt;br&gt;
+ * Spider.create(new SimplePageProcessor(&quot;http://my.oschina.net/&quot;,
+ * &quot;http://my.oschina.net/*blog/*&quot;)) &lt;br&gt;
+ * .pipeline(new FilePipeline(&quot;/data/temp/webmagic/&quot;)).run(); &lt;br&gt;
+ * &lt;br&gt;
+ * Use FileCacheQueueScheduler to store urls and cursor in files, so that a
+ * Spider can resume the status when shutdown. &lt;br&gt;
+ * Spider.create(new SimplePageProcessor(&quot;http://my.oschina.net/&quot;,
+ * &quot;http://my.oschina.net/*blog/*&quot;)) &lt;br&gt;
+ * .scheduler(new FileCacheQueueScheduler(&quot;/data/temp/webmagic/cache/&quot;)).run(); &lt;br&gt;
+ *
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @see Downloader
+ * @see Scheduler
+ * @see PageProcessor
+ * @see Pipeline
+ * @since 0.1.0
+ */
+public class Spider implements Runnable, Task {
+
+    protected Downloader downloader;
+
+<span class="nc" id="L66">    protected List&lt;Pipeline&gt; pipelines = new ArrayList&lt;Pipeline&gt;();</span>
+
+    protected PageProcessor pageProcessor;
+
+    protected List&lt;Request&gt; startRequests;
+
+    protected Site site;
+
+    protected String uuid;
+    
+    protected SpiderScheduler scheduler;
+    
+<span class="nc" id="L78">    protected Logger logger = LoggerFactory.getLogger(getClass());</span>
+
+    protected CountableThreadPool threadPool;
+
+    protected ExecutorService executorService;
+
+<span class="nc" id="L84">    protected int threadNum = 1;</span>
+
+<span class="nc" id="L86">    protected AtomicInteger stat = new AtomicInteger(STAT_INIT);</span>
+
+<span class="nc" id="L88">    protected volatile boolean exitWhenComplete = true;</span>
+
+    protected final static int STAT_INIT = 0;
+
+    protected final static int STAT_RUNNING = 1;
+
+    protected final static int STAT_STOPPED = 2;
+
+<span class="nc" id="L96">    protected boolean spawnUrl = true;</span>
+
+<span class="nc" id="L98">    protected boolean destroyWhenExit = true;</span>
+
+    private List&lt;SpiderListener&gt; spiderListeners;
+
+<span class="nc" id="L102">    private final AtomicLong pageCount = new AtomicLong(0);</span>
+
+    private Date startTime;
+
+<span class="nc" id="L106">    private long emptySleepTime = 30000;</span>
+
+    /**
+     * create a spider with pageProcessor.
+     *
+     * @param pageProcessor pageProcessor
+     * @return new spider
+     * @see PageProcessor
+     */
+    public static Spider create(PageProcessor pageProcessor) {
+<span class="nc" id="L116">        return new Spider(pageProcessor);</span>
+    }
+
+    /**
+     * create a spider with pageProcessor.
+     *
+     * @param pageProcessor pageProcessor
+     */
+<span class="nc" id="L124">    public Spider(PageProcessor pageProcessor) {</span>
+<span class="nc" id="L125">        this.pageProcessor = pageProcessor;</span>
+<span class="nc" id="L126">        this.site = pageProcessor.getSite();</span>
+<span class="nc" id="L127">        this.scheduler = new SpiderScheduler(new QueueScheduler());</span>
+<span class="nc" id="L128">    }</span>
+
+    /**
+     * Set startUrls of Spider.&lt;br&gt;
+     * Prior to startUrls of Site.
+     *
+     * @param startUrls startUrls
+     * @return this
+     */
+    public Spider startUrls(List&lt;String&gt; startUrls) {
+<span class="nc" id="L138">        checkIfRunning();</span>
+<span class="nc" id="L139">        this.startRequests = UrlUtils.convertToRequests(startUrls);</span>
+<span class="nc" id="L140">        return this;</span>
+    }
+
+    /**
+     * Set startUrls of Spider.&lt;br&gt;
+     * Prior to startUrls of Site.
+     *
+     * @param startRequests startRequests
+     * @return this
+     */
+    public Spider startRequest(List&lt;Request&gt; startRequests) {
+<span class="nc" id="L151">        checkIfRunning();</span>
+<span class="nc" id="L152">        this.startRequests = startRequests;</span>
+<span class="nc" id="L153">        return this;</span>
+    }
+
+    /**
+     * Set an uuid for spider.&lt;br&gt;
+     * Default uuid is domain of site.&lt;br&gt;
+     *
+     * @param uuid uuid
+     * @return this
+     */
+    public Spider setUUID(String uuid) {
+<span class="nc" id="L164">        this.uuid = uuid;</span>
+<span class="nc" id="L165">        return this;</span>
+    }
+
+    /**
+     * set scheduler for Spider
+     *
+     * @param scheduler scheduler
+     * @return this
+     * @see #setScheduler(us.codecraft.webmagic.scheduler.Scheduler)
+     */
+    @Deprecated
+    public Spider scheduler(Scheduler scheduler) {
+<span class="nc" id="L177">        return setScheduler(scheduler);</span>
+    }
+
+    /**
+     * set scheduler for Spider
+     *
+     * @param updateScheduler scheduler
+     * @return this
+     * @see Scheduler
+     * @since 0.2.1
+     */
+    public Spider setScheduler(Scheduler updateScheduler) {
+<span class="nc" id="L189">        checkIfRunning();</span>
+<span class="nc" id="L190">        Scheduler oldScheduler = scheduler.getScheduler();</span>
+<span class="nc" id="L191">        scheduler.setScheduler(updateScheduler);</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (oldScheduler != null) {</span>
+            Request request;
+<span class="nc bnc" id="L194" title="All 2 branches missed.">            while ((request = oldScheduler.poll(this)) != null) {</span>
+<span class="nc" id="L195">                this.scheduler.push(request, this);</span>
+            }
+        }
+<span class="nc" id="L198">        return this;</span>
+    }
+
+    /**
+     * add a pipeline for Spider
+     *
+     * @param pipeline pipeline
+     * @return this
+     * @see #addPipeline(us.codecraft.webmagic.pipeline.Pipeline)
+     * @deprecated
+     */
+    @Deprecated
+    public Spider pipeline(Pipeline pipeline) {
+<span class="nc" id="L211">        return addPipeline(pipeline);</span>
+    }
+
+    /**
+     * add a pipeline for Spider
+     *
+     * @param pipeline pipeline
+     * @return this
+     * @see Pipeline
+     * @since 0.2.1
+     */
+    public Spider addPipeline(Pipeline pipeline) {
+<span class="nc" id="L223">        checkIfRunning();</span>
+<span class="nc" id="L224">        this.pipelines.add(pipeline);</span>
+<span class="nc" id="L225">        return this;</span>
+    }
+
+    /**
+     * set pipelines for Spider
+     *
+     * @param pipelines pipelines
+     * @return this
+     * @see Pipeline
+     * @since 0.4.1
+     */
+    public Spider setPipelines(List&lt;Pipeline&gt; pipelines) {
+<span class="nc" id="L237">        checkIfRunning();</span>
+<span class="nc" id="L238">        this.pipelines = pipelines;</span>
+<span class="nc" id="L239">        return this;</span>
+    }
+
+    /**
+     * clear the pipelines set
+     *
+     * @return this
+     */
+    public Spider clearPipeline() {
+<span class="nc" id="L248">        pipelines = new ArrayList&lt;Pipeline&gt;();</span>
+<span class="nc" id="L249">        return this;</span>
+    }
+
+    /**
+     * set the downloader of spider
+     *
+     * @param downloader downloader
+     * @return this
+     * @see #setDownloader(us.codecraft.webmagic.downloader.Downloader)
+     * @deprecated
+     */
+    @Deprecated
+    public Spider downloader(Downloader downloader) {
+<span class="nc" id="L262">        return setDownloader(downloader);</span>
+    }
+
+    /**
+     * set the downloader of spider
+     *
+     * @param downloader downloader
+     * @return this
+     * @see Downloader
+     */
+    public Spider setDownloader(Downloader downloader) {
+<span class="nc" id="L273">        checkIfRunning();</span>
+<span class="nc" id="L274">        this.downloader = downloader;</span>
+<span class="nc" id="L275">        return this;</span>
+    }
+
+    protected void initComponent() {
+<span class="nc bnc" id="L279" title="All 2 branches missed.">        if (downloader == null) {</span>
+<span class="nc" id="L280">            this.downloader = new HttpClientDownloader();</span>
+        }
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        if (pipelines.isEmpty()) {</span>
+<span class="nc" id="L283">            pipelines.add(new ConsolePipeline());</span>
+        }
+<span class="nc" id="L285">        downloader.setThread(threadNum);</span>
+<span class="nc bnc" id="L286" title="All 4 branches missed.">        if (threadPool == null || threadPool.isShutdown()) {</span>
+<span class="nc bnc" id="L287" title="All 4 branches missed.">            if (executorService != null &amp;&amp; !executorService.isShutdown()) {</span>
+<span class="nc" id="L288">                threadPool = new CountableThreadPool(threadNum, executorService);</span>
+            } else {
+<span class="nc" id="L290">                threadPool = new CountableThreadPool(threadNum);</span>
+            }
+        }
+<span class="nc bnc" id="L293" title="All 2 branches missed.">        if (startRequests != null) {</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">            for (Request request : startRequests) {</span>
+<span class="nc" id="L295">                addRequest(request);</span>
+<span class="nc" id="L296">            }</span>
+<span class="nc" id="L297">            startRequests.clear();</span>
+        }
+<span class="nc" id="L299">        startTime = new Date();</span>
+<span class="nc" id="L300">    }</span>
+
+    @Override
+    public void run() {
+<span class="nc" id="L304">        checkRunningStat();</span>
+<span class="nc" id="L305">        initComponent();</span>
+<span class="nc" id="L306">        logger.info(&quot;Spider {} started!&quot;, getUUID());</span>
+        // interrupt won't be necessarily detected
+<span class="nc bnc" id="L308" title="All 4 branches missed.">        while (!Thread.currentThread().isInterrupted() &amp;&amp; stat.get() == STAT_RUNNING) {</span>
+<span class="nc" id="L309">            Request poll = scheduler.poll(this);</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">            if (poll == null) {</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">                if (threadPool.getThreadAlive() == 0) {</span>
+                    //no alive thread anymore , try again
+<span class="nc" id="L313">                    poll = scheduler.poll(this);</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">                    if (poll == null) {</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">                        if (exitWhenComplete) {</span>
+<span class="nc" id="L316">                            break;</span>
+                        } else {
+                            // wait
+                            try {
+<span class="nc" id="L320">                                Thread.sleep(emptySleepTime);</span>
+<span class="nc" id="L321">                                continue;</span>
+<span class="nc" id="L322">                            } catch (InterruptedException e) {</span>
+<span class="nc" id="L323">                                Thread.currentThread().interrupt();</span>
+<span class="nc" id="L324">                                break;</span>
+                            }
+                        }
+                    }
+                } else {
+                    // wait until new url added，
+<span class="nc bnc" id="L330" title="All 2 branches missed.">                    if (scheduler.waitNewUrl(threadPool, emptySleepTime)) {</span>
+                        // if interrupted
+<span class="nc" id="L332">                        break;</span>
+                    }
+                    continue;
+                }
+            }
+<span class="nc" id="L337">            final Request request = poll;</span>
+            //this may swallow the interruption
+<span class="nc" id="L339">            threadPool.execute(new Runnable() {</span>
+                @Override
+                public void run() {
+                    try {
+<span class="nc" id="L343">                        processRequest(request);</span>
+<span class="nc" id="L344">                        onSuccess(request);</span>
+<span class="nc" id="L345">                    } catch (Exception e) {</span>
+<span class="nc" id="L346">                        onError(request, e);</span>
+<span class="nc" id="L347">                        logger.error(&quot;process request &quot; + request + &quot; error&quot;, e);</span>
+                    } finally {
+<span class="nc" id="L349">                        pageCount.incrementAndGet();</span>
+<span class="nc" id="L350">                        scheduler.signalNewUrl();</span>
+                    }
+<span class="nc" id="L352">                }</span>
+            });
+<span class="nc" id="L354">        }</span>
+<span class="nc" id="L355">        stat.set(STAT_STOPPED);</span>
+        // release some resources
+<span class="nc bnc" id="L357" title="All 2 branches missed.">        if (destroyWhenExit) {</span>
+<span class="nc" id="L358">            close();</span>
+        }
+<span class="nc" id="L360">        logger.info(&quot;Spider {} closed! {} pages downloaded.&quot;, getUUID(), pageCount.get());</span>
+<span class="nc" id="L361">    }</span>
+
+    /**
+     * @deprecated Use {@link #onError(Request, Exception)} instead.
+     */
+    @Deprecated
+    protected void onError(Request request) {
+<span class="nc" id="L368">    }</span>
+
+    protected void onError(Request request, Exception e) {
+<span class="nc" id="L371">        this.onError(request);</span>
+
+<span class="nc bnc" id="L373" title="All 2 branches missed.">        if (CollectionUtils.isNotEmpty(spiderListeners)) {</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">            for (SpiderListener spiderListener : spiderListeners) {</span>
+<span class="nc" id="L375">                spiderListener.onError(request, e);</span>
+<span class="nc" id="L376">            }</span>
+        }
+<span class="nc" id="L378">    }</span>
+
+    protected void onSuccess(Request request) {
+<span class="nc bnc" id="L381" title="All 2 branches missed.">        if (CollectionUtils.isNotEmpty(spiderListeners)) {</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">            for (SpiderListener spiderListener : spiderListeners) {</span>
+<span class="nc" id="L383">                spiderListener.onSuccess(request);</span>
+<span class="nc" id="L384">            }</span>
+        }
+<span class="nc" id="L386">    }</span>
+
+    private void checkRunningStat() {
+        while (true) {
+<span class="nc" id="L390">            int statNow = stat.get();</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">            if (statNow == STAT_RUNNING) {</span>
+<span class="nc" id="L392">                throw new IllegalStateException(&quot;Spider is already running!&quot;);</span>
+            }
+<span class="nc bnc" id="L394" title="All 2 branches missed.">            if (stat.compareAndSet(statNow, STAT_RUNNING)) {</span>
+<span class="nc" id="L395">                break;</span>
+            }
+<span class="nc" id="L397">        }</span>
+<span class="nc" id="L398">    }</span>
+
+    public void close() {
+<span class="nc" id="L401">        destroyEach(downloader);</span>
+<span class="nc" id="L402">        destroyEach(pageProcessor);</span>
+<span class="nc" id="L403">        destroyEach(scheduler);</span>
+<span class="nc bnc" id="L404" title="All 2 branches missed.">        for (Pipeline pipeline : pipelines) {</span>
+<span class="nc" id="L405">            destroyEach(pipeline);</span>
+<span class="nc" id="L406">        }</span>
+<span class="nc" id="L407">        threadPool.shutdown();</span>
+<span class="nc" id="L408">    }</span>
+
+    private void destroyEach(Object object) {
+<span class="nc bnc" id="L411" title="All 2 branches missed.">        if (object instanceof Closeable) {</span>
+            try {
+<span class="nc" id="L413">                ((Closeable) object).close();</span>
+<span class="nc" id="L414">            } catch (IOException e) {</span>
+<span class="nc" id="L415">                e.printStackTrace();</span>
+<span class="nc" id="L416">            }</span>
+        }
+<span class="nc" id="L418">    }</span>
+
+    /**
+     * Process specific urls without url discovering.
+     *
+     * @param urls urls to process
+     */
+    public void test(String... urls) {
+<span class="nc" id="L426">        initComponent();</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">        if (urls.length &gt; 0) {</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">            for (String url : urls) {</span>
+<span class="nc" id="L429">                processRequest(new Request(url));</span>
+            }
+        }
+<span class="nc" id="L432">    }</span>
+
+    private void processRequest(Request request) {
+        Page page;
+<span class="nc bnc" id="L436" title="All 2 branches missed.">        if (null != request.getDownloader()){</span>
+<span class="nc" id="L437">            page = request.getDownloader().download(request,this);</span>
+        }else {
+<span class="nc" id="L439">            page = downloader.download(request, this);</span>
+        }
+<span class="nc bnc" id="L441" title="All 2 branches missed.">        if (page.isDownloadSuccess()){</span>
+<span class="nc" id="L442">            onDownloadSuccess(request, page);</span>
+        } else {
+<span class="nc" id="L444">            onDownloaderFail(request);</span>
+        }
+<span class="nc" id="L446">    }</span>
+
+    private void onDownloadSuccess(Request request, Page page) {
+<span class="nc bnc" id="L449" title="All 2 branches missed.">        if (site.getAcceptStatCode().contains(page.getStatusCode())){</span>
+<span class="nc" id="L450">            pageProcessor.process(page);</span>
+<span class="nc" id="L451">            extractAndAddRequests(page, spawnUrl);</span>
+<span class="nc bnc" id="L452" title="All 2 branches missed.">            if (!page.getResultItems().isSkip()) {</span>
+<span class="nc bnc" id="L453" title="All 2 branches missed.">                for (Pipeline pipeline : pipelines) {</span>
+<span class="nc" id="L454">                    pipeline.process(page.getResultItems(), this);</span>
+<span class="nc" id="L455">                }</span>
+            }
+        } else {
+<span class="nc" id="L458">            logger.info(&quot;page status code error, page {} , code: {}&quot;, request.getUrl(), page.getStatusCode());</span>
+        }
+<span class="nc" id="L460">        sleep(site.getSleepTime());</span>
+<span class="nc" id="L461">    }</span>
+
+    private void onDownloaderFail(Request request) {
+<span class="nc bnc" id="L464" title="All 2 branches missed.">        if (site.getCycleRetryTimes() == 0) {</span>
+<span class="nc" id="L465">            sleep(site.getSleepTime());</span>
+        } else {
+            // for cycle retry
+<span class="nc" id="L468">            doCycleRetry(request);</span>
+        }
+<span class="nc" id="L470">    }</span>
+
+    private void doCycleRetry(Request request) {
+<span class="nc" id="L473">        Object cycleTriedTimesObject = request.getExtra(Request.CYCLE_TRIED_TIMES);</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">        if (cycleTriedTimesObject == null) {</span>
+<span class="nc" id="L475">            addRequest(SerializationUtils.clone(request).setPriority(0).putExtra(Request.CYCLE_TRIED_TIMES, 1));</span>
+        } else {
+<span class="nc" id="L477">            int cycleTriedTimes = (Integer) cycleTriedTimesObject;</span>
+<span class="nc" id="L478">            cycleTriedTimes++;</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">            if (cycleTriedTimes &lt; site.getCycleRetryTimes()) {</span>
+<span class="nc" id="L480">                addRequest(SerializationUtils.clone(request).setPriority(0).putExtra(Request.CYCLE_TRIED_TIMES, cycleTriedTimes));</span>
+            }
+        }
+<span class="nc" id="L483">        sleep(site.getRetrySleepTime());</span>
+<span class="nc" id="L484">    }</span>
+
+    protected void sleep(int time) {
+        try {
+<span class="nc" id="L488">            Thread.sleep(time);</span>
+<span class="nc" id="L489">        } catch (InterruptedException e) {</span>
+<span class="nc" id="L490">            logger.error(&quot;Thread interrupted when sleep&quot;,e);</span>
+<span class="nc" id="L491">            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L492">        }</span>
+<span class="nc" id="L493">    }</span>
+
+    protected void extractAndAddRequests(Page page, boolean spawnUrl) {
+<span class="nc bnc" id="L496" title="All 4 branches missed.">        if (spawnUrl &amp;&amp; CollectionUtils.isNotEmpty(page.getTargetRequests())) {</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">            for (Request request : page.getTargetRequests()) {</span>
+<span class="nc" id="L498">                addRequest(request);</span>
+<span class="nc" id="L499">            }</span>
+        }
+<span class="nc" id="L501">    }</span>
+
+    private void addRequest(Request request) {
+<span class="nc bnc" id="L504" title="All 6 branches missed.">        if (site.getDomain() == null &amp;&amp; request != null &amp;&amp; request.getUrl() != null) {</span>
+<span class="nc" id="L505">            site.setDomain(UrlUtils.getDomain(request.getUrl()));</span>
+        }
+<span class="nc" id="L507">        scheduler.push(request, this);</span>
+<span class="nc" id="L508">    }</span>
+
+    protected void checkIfRunning() {
+<span class="nc bnc" id="L511" title="All 2 branches missed.">        if (stat.get() == STAT_RUNNING) {</span>
+<span class="nc" id="L512">            throw new IllegalStateException(&quot;Spider is already running!&quot;);</span>
+        }
+<span class="nc" id="L514">    }</span>
+
+    public void runAsync() {
+<span class="nc" id="L517">        Thread thread = new Thread(this);</span>
+<span class="nc" id="L518">        thread.setDaemon(false);</span>
+<span class="nc" id="L519">        thread.start();</span>
+<span class="nc" id="L520">    }</span>
+
+    /**
+     * Add urls to crawl. &lt;br&gt;
+     *
+     * @param urls urls
+     * @return this
+     */
+    public Spider addUrl(String... urls) {
+<span class="nc bnc" id="L529" title="All 2 branches missed.">        for (String url : urls) {</span>
+<span class="nc" id="L530">            addRequest(new Request(url));</span>
+        }
+<span class="nc" id="L532">        scheduler.signalNewUrl();</span>
+<span class="nc" id="L533">        return this;</span>
+    }
+
+    /**
+     * Download urls synchronizing.
+     *
+     * @param urls urls
+     * @param &lt;T&gt; type of process result
+     * @return list downloaded
+     */
+    public &lt;T&gt; List&lt;T&gt; getAll(Collection&lt;String&gt; urls) {
+<span class="nc" id="L544">        destroyWhenExit = false;</span>
+<span class="nc" id="L545">        spawnUrl = false;</span>
+<span class="nc bnc" id="L546" title="All 2 branches missed.">        if (startRequests!=null){</span>
+<span class="nc" id="L547">            startRequests.clear();</span>
+        }
+<span class="nc bnc" id="L549" title="All 2 branches missed.">        for (Request request : UrlUtils.convertToRequests(urls)) {</span>
+<span class="nc" id="L550">            addRequest(request);</span>
+<span class="nc" id="L551">        }</span>
+<span class="nc" id="L552">        CollectorPipeline collectorPipeline = getCollectorPipeline();</span>
+<span class="nc" id="L553">        pipelines.add(collectorPipeline);</span>
+<span class="nc" id="L554">        run();</span>
+<span class="nc" id="L555">        spawnUrl = true;</span>
+<span class="nc" id="L556">        destroyWhenExit = true;</span>
+<span class="nc" id="L557">        return collectorPipeline.getCollected();</span>
+    }
+
+    protected CollectorPipeline getCollectorPipeline() {
+<span class="nc" id="L561">        return new ResultItemsCollectorPipeline();</span>
+    }
+
+    public &lt;T&gt; T get(String url) {
+<span class="nc" id="L565">        List&lt;String&gt; urls = WMCollections.newArrayList(url);</span>
+<span class="nc" id="L566">        List&lt;T&gt; resultItemses = getAll(urls);</span>
+<span class="nc bnc" id="L567" title="All 4 branches missed.">        if (resultItemses != null &amp;&amp; resultItemses.size() &gt; 0) {</span>
+<span class="nc" id="L568">            return resultItemses.get(0);</span>
+        } else {
+<span class="nc" id="L570">            return null;</span>
+        }
+    }
+
+    /**
+     * Add urls with information to crawl.&lt;br&gt;
+     *
+     * @param requests requests
+     * @return this
+     */
+    public Spider addRequest(Request... requests) {
+<span class="nc bnc" id="L581" title="All 2 branches missed.">        for (Request request : requests) {</span>
+<span class="nc" id="L582">            addRequest(request);</span>
+        }
+<span class="nc" id="L584">        scheduler.signalNewUrl();</span>
+<span class="nc" id="L585">        return this;</span>
+    }
+
+    public void start() {
+<span class="nc" id="L589">        runAsync();</span>
+<span class="nc" id="L590">    }</span>
+
+    public void stop() {
+<span class="nc bnc" id="L593" title="All 2 branches missed.">        if (stat.compareAndSet(STAT_RUNNING, STAT_STOPPED)) {</span>
+<span class="nc" id="L594">            logger.info(&quot;Spider &quot; + getUUID() + &quot; stop success!&quot;);</span>
+        } else {
+<span class="nc" id="L596">            logger.info(&quot;Spider &quot; + getUUID() + &quot; stop fail!&quot;);</span>
+        }
+<span class="nc" id="L598">    }</span>
+
+    /**
+     * Stop when all tasks in the queue are completed and all worker threads are also completed
+     */
+    public void stopWhenComplete(){
+<span class="nc" id="L604">        this.exitWhenComplete = true;</span>
+<span class="nc" id="L605">    }</span>
+
+    /**
+     * start with more than one threads
+     *
+     * @param threadNum threadNum
+     * @return this
+     */
+    public Spider thread(int threadNum) {
+<span class="nc" id="L614">        checkIfRunning();</span>
+<span class="nc" id="L615">        this.threadNum = threadNum;</span>
+<span class="nc bnc" id="L616" title="All 2 branches missed.">        if (threadNum &lt;= 0) {</span>
+<span class="nc" id="L617">            throw new IllegalArgumentException(&quot;threadNum should be more than one!&quot;);</span>
+        }
+<span class="nc" id="L619">        return this;</span>
+    }
+
+    /**
+     * start with more than one threads
+     *
+     * @param executorService executorService to run the spider
+     * @param threadNum threadNum
+     * @return this
+     */
+    public Spider thread(ExecutorService executorService, int threadNum) {
+<span class="nc" id="L630">        checkIfRunning();</span>
+<span class="nc" id="L631">        this.threadNum = threadNum;</span>
+<span class="nc bnc" id="L632" title="All 2 branches missed.">        if (threadNum &lt;= 0) {</span>
+<span class="nc" id="L633">            throw new IllegalArgumentException(&quot;threadNum should be more than one!&quot;);</span>
+        }
+<span class="nc" id="L635">        this.executorService = executorService;</span>
+<span class="nc" id="L636">        return this;</span>
+    }
+
+    public boolean isExitWhenComplete() {
+<span class="nc" id="L640">        return exitWhenComplete;</span>
+    }
+
+    /**
+     * Exit when complete. &lt;br&gt;
+     * True: exit when all url of the site is downloaded. &lt;br&gt;
+     * False: not exit until call stop() manually.&lt;br&gt;
+     *
+     * @param exitWhenComplete exitWhenComplete
+     * @return this
+     */
+    public Spider setExitWhenComplete(boolean exitWhenComplete) {
+<span class="nc" id="L652">        this.exitWhenComplete = exitWhenComplete;</span>
+<span class="nc" id="L653">        return this;</span>
+    }
+
+    public boolean isSpawnUrl() {
+<span class="nc" id="L657">        return spawnUrl;</span>
+    }
+
+    /**
+     * Get page count downloaded by spider.
+     *
+     * @return total downloaded page count
+     * @since 0.4.1
+     */
+    public long getPageCount() {
+<span class="nc" id="L667">        return pageCount.get();</span>
+    }
+
+    /**
+     * Get running status by spider.
+     *
+     * @return running status
+     * @see Status
+     * @since 0.4.1
+     */
+    public Status getStatus() {
+<span class="nc" id="L678">        return Status.fromValue(stat.get());</span>
+    }
+
+
+<span class="nc" id="L682">    public enum Status {</span>
+<span class="nc" id="L683">        Init(0), Running(1), Stopped(2);</span>
+
+<span class="nc" id="L685">        private Status(int value) {</span>
+<span class="nc" id="L686">            this.value = value;</span>
+<span class="nc" id="L687">        }</span>
+
+        private int value;
+
+        int getValue() {
+<span class="nc" id="L692">            return value;</span>
+        }
+
+        public static Status fromValue(int value) {
+<span class="nc bnc" id="L696" title="All 2 branches missed.">            for (Status status : Status.values()) {</span>
+<span class="nc bnc" id="L697" title="All 2 branches missed.">                if (status.getValue() == value) {</span>
+<span class="nc" id="L698">                    return status;</span>
+                }
+            }
+            //default value
+<span class="nc" id="L702">            return Init;</span>
+        }
+    }
+
+    /**
+     * Get thread count which is running
+     *
+     * @return thread count which is running
+     * @since 0.4.1
+     */
+    public int getThreadAlive() {
+<span class="nc bnc" id="L713" title="All 2 branches missed.">        if (threadPool == null) {</span>
+<span class="nc" id="L714">            return 0;</span>
+        }
+<span class="nc" id="L716">        return threadPool.getThreadAlive();</span>
+    }
+
+    /**
+     * Whether add urls extracted to download.&lt;br&gt;
+     * Add urls to download when it is true, and just download seed urls when it is false. &lt;br&gt;
+     * DO NOT set it unless you know what it means!
+     *
+     * @param spawnUrl spawnUrl
+     * @return this
+     * @since 0.4.0
+     */
+    public Spider setSpawnUrl(boolean spawnUrl) {
+<span class="nc" id="L729">        this.spawnUrl = spawnUrl;</span>
+<span class="nc" id="L730">        return this;</span>
+    }
+
+    @Override
+    public String getUUID() {
+<span class="nc bnc" id="L735" title="All 2 branches missed.">        if (uuid != null) {</span>
+<span class="nc" id="L736">            return uuid;</span>
+        }
+<span class="nc bnc" id="L738" title="All 2 branches missed.">        if (site != null) {</span>
+<span class="nc" id="L739">            return site.getDomain();</span>
+        }
+<span class="nc" id="L741">        uuid = UUID.randomUUID().toString();</span>
+<span class="nc" id="L742">        return uuid;</span>
+    }
+
+    public Spider setExecutorService(ExecutorService executorService) {
+<span class="nc" id="L746">        checkIfRunning();</span>
+<span class="nc" id="L747">        this.executorService = executorService;</span>
+<span class="nc" id="L748">        return this;</span>
+    }
+
+    @Override
+    public Site getSite() {
+<span class="nc" id="L753">        return site;</span>
+    }
+
+    public List&lt;SpiderListener&gt; getSpiderListeners() {
+<span class="nc" id="L757">        return spiderListeners;</span>
+    }
+
+    public Spider setSpiderListeners(List&lt;SpiderListener&gt; spiderListeners) {
+<span class="nc" id="L761">        this.spiderListeners = spiderListeners;</span>
+<span class="nc" id="L762">        return this;</span>
+    }
+
+    public Date getStartTime() {
+<span class="nc" id="L766">        return startTime;</span>
+    }
+
+    public Scheduler getScheduler() {
+<span class="nc" id="L770">        return scheduler.getScheduler();</span>
+    }
+
+    /**
+     * Set wait time when no url is polled.&lt;br&gt;&lt;br&gt;
+     *
+     * @param emptySleepTime In MILLISECONDS.
+     * @return this
+     */
+    public Spider setEmptySleepTime(long emptySleepTime) {
+<span class="nc bnc" id="L780" title="All 2 branches missed.">        if(emptySleepTime&lt;=0){</span>
+<span class="nc" id="L781">            throw new IllegalArgumentException(&quot;emptySleepTime should be more than zero!&quot;);</span>
+        }
+<span class="nc" id="L783">        this.emptySleepTime = emptySleepTime;</span>
+<span class="nc" id="L784">        return this;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

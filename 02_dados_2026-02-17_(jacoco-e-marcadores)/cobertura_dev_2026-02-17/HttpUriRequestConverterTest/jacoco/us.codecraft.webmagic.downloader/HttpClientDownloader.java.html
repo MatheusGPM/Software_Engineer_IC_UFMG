@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpClientDownloader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webmagic-core</a> &gt; <a href="index.source.html" class="el_package">us.codecraft.webmagic.downloader</a> &gt; <span class="el_source">HttpClientDownloader.java</span></div><h1>HttpClientDownloader.java</h1><pre class="source lang-java linenums">package us.codecraft.webmagic.downloader;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
+
+import us.codecraft.webmagic.Page;
+import us.codecraft.webmagic.Request;
+import us.codecraft.webmagic.Site;
+import us.codecraft.webmagic.Task;
+import us.codecraft.webmagic.proxy.Proxy;
+import us.codecraft.webmagic.proxy.ProxyProvider;
+import us.codecraft.webmagic.selector.PlainText;
+import us.codecraft.webmagic.utils.CharsetUtils;
+import us.codecraft.webmagic.utils.HttpClientUtils;
+
+/**
+ * The http downloader based on HttpClient.
+ *
+ * @author code4crafter@gmail.com &lt;br&gt;
+ * @since 0.1.0
+ */
+<span class="nc" id="L32">public class HttpClientDownloader extends AbstractDownloader {</span>
+
+<span class="nc" id="L34">    private final Map&lt;String, CloseableHttpClient&gt; httpClients = new HashMap&lt;String, CloseableHttpClient&gt;();</span>
+
+<span class="nc" id="L36">    private HttpClientGenerator httpClientGenerator = new HttpClientGenerator();</span>
+
+<span class="nc" id="L38">    private HttpUriRequestConverter httpUriRequestConverter = new HttpUriRequestConverter();</span>
+
+    private ProxyProvider proxyProvider;
+
+<span class="nc" id="L42">    private boolean responseHeader = true;</span>
+
+    public void setHttpUriRequestConverter(HttpUriRequestConverter httpUriRequestConverter) {
+<span class="nc" id="L45">        this.httpUriRequestConverter = httpUriRequestConverter;</span>
+<span class="nc" id="L46">    }</span>
+
+    public void setProxyProvider(ProxyProvider proxyProvider) {
+<span class="nc" id="L49">        this.proxyProvider = proxyProvider;</span>
+<span class="nc" id="L50">    }</span>
+
+    private CloseableHttpClient getHttpClient(Site site) {
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        if (site == null) {</span>
+<span class="nc" id="L54">            return httpClientGenerator.getClient(null);</span>
+        }
+<span class="nc" id="L56">        String domain = site.getDomain();</span>
+<span class="nc" id="L57">        CloseableHttpClient httpClient = httpClients.get(domain);</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if (httpClient == null) {</span>
+<span class="nc" id="L59">            synchronized (this) {</span>
+<span class="nc" id="L60">                httpClient = httpClients.get(domain);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">                if (httpClient == null) {</span>
+<span class="nc" id="L62">                    httpClient = httpClientGenerator.getClient(site);</span>
+<span class="nc" id="L63">                    httpClients.put(domain, httpClient);</span>
+                }
+<span class="nc" id="L65">            }</span>
+        }
+<span class="nc" id="L67">        return httpClient;</span>
+    }
+
+    @Override
+    public Page download(Request request, Task task) {
+<span class="nc bnc" id="L72" title="All 4 branches missed.">        if (task == null || task.getSite() == null) {</span>
+<span class="nc" id="L73">            throw new NullPointerException(&quot;task or site can not be null&quot;);</span>
+        }
+<span class="nc" id="L75">        CloseableHttpResponse httpResponse = null;</span>
+<span class="nc" id="L76">        CloseableHttpClient httpClient = getHttpClient(task.getSite());</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        Proxy proxy = proxyProvider != null ? proxyProvider.getProxy(request, task) : null;</span>
+<span class="nc" id="L78">        HttpClientRequestContext requestContext = httpUriRequestConverter.convert(request, task.getSite(), proxy);</span>
+<span class="nc" id="L79">        Page page = null;</span>
+        try {
+<span class="nc" id="L81">            httpResponse = httpClient.execute(requestContext.getHttpUriRequest(), requestContext.getHttpClientContext());</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            page = handleResponse(request, request.getCharset() != null ? request.getCharset() : task.getSite().getCharset(), httpResponse, task);</span>
+<span class="nc" id="L83">            onSuccess(page, task);</span>
+<span class="nc" id="L84">            return page;</span>
+<span class="nc" id="L85">        } catch (IOException e) {</span>
+<span class="nc" id="L86">            page = Page.ofFailure(request);</span>
+<span class="nc" id="L87">            onError(page, task, e);</span>
+<span class="nc" id="L88">            return page;</span>
+        } finally {
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            if (httpResponse != null) {</span>
+                //ensure the connection is released back to pool
+<span class="nc" id="L92">                EntityUtils.consumeQuietly(httpResponse.getEntity());</span>
+            }
+<span class="nc bnc" id="L94" title="All 4 branches missed.">            if (proxyProvider != null &amp;&amp; proxy != null) {</span>
+<span class="nc" id="L95">                proxyProvider.returnProxy(proxy, page, task);</span>
+            }
+        }
+    }
+
+    @Override
+    public void setThread(int thread) {
+<span class="nc" id="L102">        httpClientGenerator.setPoolSize(thread);</span>
+<span class="nc" id="L103">    }</span>
+
+    protected Page handleResponse(Request request, String charset, HttpResponse httpResponse, Task task) throws IOException {
+<span class="nc" id="L106">        HttpEntity entity = httpResponse.getEntity();</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        byte[] bytes = entity != null ? IOUtils.toByteArray(entity.getContent()) : new byte[0];</span>
+<span class="nc bnc" id="L108" title="All 4 branches missed.">        String contentType = entity != null &amp;&amp; entity.getContentType() != null ? entity.getContentType().getValue() : null;</span>
+<span class="nc" id="L109">        Page page = Page.ofSuccess(request);</span>
+<span class="nc" id="L110">        page.setBytes(bytes);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (!request.isBinaryContent()) {</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">            if (charset == null) {</span>
+<span class="nc" id="L113">                charset = getHtmlCharset(contentType, bytes, task);</span>
+            }
+<span class="nc" id="L115">            page.setCharset(charset);</span>
+<span class="nc" id="L116">            page.setRawText(new String(bytes, charset));</span>
+        }
+<span class="nc" id="L118">        page.setUrl(new PlainText(request.getUrl()));</span>
+<span class="nc" id="L119">        page.setRequest(request);</span>
+<span class="nc" id="L120">        page.setStatusCode(httpResponse.getStatusLine().getStatusCode());</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (responseHeader) {</span>
+<span class="nc" id="L122">            page.setHeaders(HttpClientUtils.convertHeaders(httpResponse.getAllHeaders()));</span>
+        }
+<span class="nc" id="L124">        return page;</span>
+    }
+
+    private String getHtmlCharset(String contentType, byte[] contentBytes, Task task) throws IOException {
+<span class="nc" id="L128">        String charset = CharsetUtils.detectCharset(contentType, contentBytes);</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (charset == null) {</span>
+<span class="nc" id="L130">            charset = Optional.ofNullable(task.getSite().getDefaultCharset()).orElseGet(Charset.defaultCharset()::name);</span>
+        }
+<span class="nc" id="L132">        return charset;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
