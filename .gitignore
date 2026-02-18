@@ -4,3 +4,8 @@ target/
 webmagic-develop/
 jsoup1-main/
 *.zip
+
+# locais / gerados
+data/
+vendor/
+webmagic_com_testes_LLM/
