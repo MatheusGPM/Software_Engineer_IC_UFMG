@@ -5,3 +5,6 @@
 	url = https://github.com/code4craft/webmagic.git
 [submodule "webmagic_com_testes_LLM"]
 	url = https://github.com/MatheusGPM/webmagic.git
+[submodule "08_repos_2026-02-18_(webmagic-sem-devtest-metodo1)/webmagic_sem_devtest_metodo1"]
+	path = 08_repos_2026-02-18_(webmagic-sem-devtest-metodo1)/webmagic_sem_devtest_metodo1
+	url = git@github.com:MatheusGPM/webmagic-sem-devtest-metodo1.git
