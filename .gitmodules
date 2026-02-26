@@ -11,3 +11,6 @@
 [submodule "07_repositorios_originais/jsoup1-original"]
 	path = 07_repositorios_originais/jsoup1-original
 	url = https://github.com/MatheusGPM/jsoup1-original.git
+[submodule "08_repositorios_semTestes/jsoup1-sem-devtests-6metodos"]
+	path = 08_repositorios_semTestes/jsoup1-sem-devtests-6metodos
+	url = https://github.com/MatheusGPM/jsoup1-sem-devtests-6metodos.git
