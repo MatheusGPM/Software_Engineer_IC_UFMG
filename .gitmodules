@@ -14,3 +14,6 @@
 [submodule "08_repositorios_semTestes/jsoup1-sem-devtests-6metodos"]
 	path = 08_repositorios_semTestes/jsoup1-sem-devtests-6metodos
 	url = https://github.com/MatheusGPM/jsoup1-sem-devtests-6metodos.git
+[submodule "08_repositorios_semTestes/webmagic-sem-devtests-6metodos"]
+	path = 08_repositorios_semTestes/webmagic-sem-devtests-6metodos
+	url = https://github.com/MatheusGPM/webmagic-sem-devtests-6metodos.git
