@@ -8,3 +8,6 @@
 [submodule "08_repositorios_semTestes/webmagic_sem_devtest_metodo1"]
 	path = 08_repositorios_semTestes/webmagic_sem_devtest_metodo1
 	url = git@github.com:MatheusGPM/webmagic-sem-devtest-metodo1.git
+[submodule "07_repositorios_originais/jsoup1-original"]
+	path = 07_repositorios_originais/jsoup1-original
+	url = https://github.com/MatheusGPM/jsoup1-original.git
