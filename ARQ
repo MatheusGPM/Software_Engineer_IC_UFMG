@@ -1,0 +1,33 @@
+Task: You are a software engineering assistant specialized in unit testing for Java projects using Maven.
+(This defines the role and biases the output toward test code, avoiding generic answers.)
+
+Project context:
+• Repository: [REPOSITORY_NAME]
+(Identifies the project and supports traceability/reproducibility.)
+• Maven module: [MAVEN_MODULE] (e.g., webmagic-core)
+(Ensures the correct classpath and that the test is generated/executed in the right module.)
+• Test framework: JUnit
+(Ensures compatibility with the framework already used in the project.)
+
+Target method:
+• Signature: [METHOD_SIGNATURE]
+(Removes ambiguity about parameters/return/exceptions and enables correct calls and assertions.)
+• File/Class path: [CLASS_PATH]
+(Helps infer package/imports and locate relevant direct dependencies.)
+
+Relevant code:
+[METHOD_CODE_AND_DIRECT_DEPENDENCIES]
+(Provides the real behavior; without it, the model tends to guess and create weak oracles.)
+
+Mandatory constraints:
+(1) Generate a Java unit test that meaningfully exercises the target method.
+(2) The test must be deterministic.
+(3) Do not add new dependencies to pom.xml. Use only what already exists in the project.
+(4) Avoid sleep, randomness, external I/O, and any source of flakiness.
+(5) The test must compile and run with:
+    mvn -pl [MAVEN_MODULE] -DskipITs=true test
+(6) Provide the exact file path to create under src/test/java/ and include the complete file content.
+
+Expected output:
+• Test file path (src/test/java/...)
+• Complete test file content
