@@ -1,28 +1,33 @@
-Tarefa: Você é uma assistente de engenharia de software especializada em testes unitários para projetos Java com Maven. (Define o papel e força a saída esperada como código de teste, evitando respostas genéricas.)
+Task: You are a software engineering assistant specialized in unit testing for Java projects using Maven.
+(This defines the role and biases the output toward test code, avoiding generic answers.)
 
-Contexto do projeto:
-• Repositório: [NOME_DO_REPOSITORIO] (Identifica o projeto e ajuda na rastreabilidade/reprodutibilidade do experimento.)
-• Módulo Maven: [MODULO_MAVEN] (ex.: webmagic-core) (Delimita o classpath correto e garante que o teste seja gerado/rodado no módulo certo.)
-• Framework de testes: JUnit (Garante compatibilidade com o framework já usado no projeto, evitando alternativas não suportadas.)
+Project context:
+• Repository: [REPOSITORY_NAME]
+(Identifies the project and supports traceability/reproducibility.)
+• Maven module: [MAVEN_MODULE] (e.g., webmagic-core)
+(Ensures the correct classpath and that the test is generated/executed in the right module.)
+• Test framework: JUnit
+(Ensures compatibility with the framework already used in the project.)
 
-Método-alvo:
-• Assinatura: [ASSINATURA_DO_METODO] (Remove ambiguidade sobre parâmetros/retorno/exceções e permite chamadas e asserts corretos.)
-• Arquivo/classe: [CAMINHO_DA_CLASSE] (Permite inferir pacote/imports e localizar dependências diretas relevantes para o teste.)
+Target method:
+• Signature: [METHOD_SIGNATURE]
+(Removes ambiguity about parameters/return/exceptions and enables correct calls and assertions.)
+• File/Class path: [CLASS_PATH]
+(Helps infer package/imports and locate relevant direct dependencies.)
 
-Código relevante:
-[TRECHO_DO_CODIGO_DO_METODO_E_DEPENDENCIAS_DIRETAS]
-(Fornece o comportamento real do método; sem isso o modelo tende a supor casos e oráculos frágeis.)
+Relevant code:
+[METHOD_CODE_AND_DIRECT_DEPENDENCIES]
+(Provides the real behavior; without it, the model tends to guess and create weak oracles.)
 
-Restrições obrigatórias:
-(1) Gere um teste unitário em Java que exercite o método-alvo de forma significativa.
-(2) O teste deve ser determinístico
-(3) Não adicione novas dependências no pom.xml. Use apenas o que já existe no projeto. (Preserva o ambiente e garante comparabilidade entre baseline e teste gerado.)
-(4) Evite sleep, random, I/O externo e qualquer flakiness. (Reduz instabilidade e mantém execução rápida e confiável no CI.)
-(5) O teste deve compilar e executar via:
-mvn -pl [MODULO_MAVEN] -DskipITs=true test
-(Ancora o teste no comando real do pipeline, evitando soluções que não rodam no setup.)
-(6) Informe o caminho exato do arquivo a ser criado em src/test/java/ e forneça o conteúdo completo do arquivo. (Facilita integração automática e evita ambiguidades de pacote/nome/imports.)
+Mandatory constraints:
+(1) Generate a Java unit test that meaningfully exercises the target method.
+(2) The test must be deterministic.
+(3) Do not add new dependencies to pom.xml. Use only what already exists in the project.
+(4) Avoid sleep, randomness, external I/O, and any source of flakiness.
+(5) The test must compile and run with:
+    mvn -pl [MAVEN_MODULE] -DskipITs=true test
+(6) Provide the exact file path to create under src/test/java/ and include the complete file content.
 
-Saída esperada:
-• Caminho do arquivo de teste (src/test/java/...) (Padroniza a inserção do artefato e a coleta no repositório.)
-• Conteúdo completo do teste
+Expected output:
+• Test file path (src/test/java/...)
+• Complete test file content
