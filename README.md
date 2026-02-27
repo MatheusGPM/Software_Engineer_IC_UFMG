@@ -32,6 +32,4 @@ Repositório do projeto de Iniciação Científica (IC) focado em **geração de
 - selecionar métodos-alvo,
 - consolidar resultados em CSV.
 
-## Como citar
-Se usar este repositório em relatório/artigo, use o arquivo `CITATION.cff`.
 
